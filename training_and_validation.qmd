@@ -17,8 +17,6 @@ The desired output in this notebook are images of the training and validation da
 from pathlib import Path
 import geopandas as gpd
 
-
-
 SRC_DATA_PATH = Path("/Users/legariapena.j/Library/CloudStorage/GoogleDrive-legariapena.j@husky.neu.edu/Shared drives/Cool and Carbon Free Africa/Building Image Datasets/data")
 
 #Ground truth monterrey
@@ -179,7 +177,6 @@ And now let's show the training and validation sets for Boston.
 ground_truth_boston = ground_truth_boston.to_crs(gdf_boston_data.crs)
 ground_truth_boston["data_type"] = "Not in either"
 
-
 indices_boston_local = [int(b.split("_")[-1]) - 1 for b in ids_boston_data]
 boston_data_types = [data_type_boston[b] for b in ids_boston_data]
 ground_truth_boston.loc[indices_boston_local, "data_type"] = boston_data_types
@@ -215,5 +212,4 @@ display_footprints_categorical(
     buffer_meters = 4,
     save_path="/Users/legariapena.j/Documents/imageable-2026/imageable/data/paper_images/train_validation_boston.jpg",
 )
-
 ```
