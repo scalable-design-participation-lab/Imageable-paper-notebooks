@@ -3,4 +3,4 @@ All the clean Quarto notebooks of the paper we submitted the EPB. I am currently
 
 To view the notebooks click on:
 
-* [Validation and Training](https://walup.github.io/Imageable-paper-notebook/training_and_validation.html)
+* [Validation and Training](https://scalable-design-participation-lab.github.io/Imageable-paper-notebooks/training_and_validation.html)
