@@ -5,4 +5,5 @@ To view the notebooks click on:
 
 * [Validation and Training](https://scalable-design-participation-lab.github.io/Imageable-paper-notebooks/training_and_validation.html)
 * [Clustering wheel visualization](https://scalable-design-participation-lab.github.io/Imageable-paper-notebooks/clustering_wheel.html)
+* [Height and materials visualization](https://scalable-design-participation-lab.github.io/Imageable-paper-notebooks/heights_and_materials.html)
 
