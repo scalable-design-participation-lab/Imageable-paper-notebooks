@@ -1,0 +1,219 @@
+---
+title: Training and Validation datasets.
+author: Uriel Legaria
+format: html
+jupyter: imageable
+execute:
+  warning: false
+  message: false
+---
+
+The desired output in this notebook are images of the training and validation datasets for the two environments we considered in the *Imageable* paper: Monterrey (distritotec) and Boston. 
+
+#### Opening the footprint data
+
+
+```{python}
+from pathlib import Path
+import geopandas as gpd
+
+
+
+SRC_DATA_PATH = Path("/Users/legariapena.j/Library/CloudStorage/GoogleDrive-legariapena.j@husky.neu.edu/Shared drives/Cool and Carbon Free Africa/Building Image Datasets/data")
+
+#Ground truth monterrey
+ground_truth_monterrey_path = SRC_DATA_PATH/"monterrey"/"footprints"/"labelled_buildings_expanded.geojson"
+ground_truth_monterrey = gpd.read_file(ground_truth_monterrey_path)
+
+#All buildings monterrey
+all_buildings_path_monterrey = SRC_DATA_PATH/"monterrey"/"footprints"/"all_buildings_dedup.geojson"
+all_buildings_monterrey = gpd.read_file(all_buildings_path_monterrey)
+
+#Ground truth boston
+ground_truth_boston_path = SRC_DATA_PATH/"boston"/"footprints"/"labelled_buildings_meters.geojson"
+ground_truth_boston = gpd.read_file(ground_truth_boston_path)
+
+#All buildings boston
+all_buildings_path_boston = SRC_DATA_PATH/"boston"/"footprints"/"boston_buildings.geojson"
+all_buildings_boston = gpd.read_file(all_buildings_path_boston)
+
+
+batches_names = ["1-1000","1000-2000","2000-3000", "3000-4000", "4000-5000", "5000-6000", "6000-7000", "7000=8000", "8000-9000", "9000-10000"]
+#Open all monterrey feature geojsons (batches)
+monterrey_geojsons = {}
+for i in [0, 1, 2, 3, 4, 5, 20, 21, 22, 23, 24, 25, 26]:
+    if(i == 0):
+        first_index = i*1000+1
+    else:
+        first_index = i*1000
+
+    second_index = (i+1)*1000
+    first_string = "Images "+f"{first_index} - {second_index}"
+    file_path = SRC_DATA_PATH/"monterrey_dedup"/first_string/f"building_data_{first_index}_{second_index}.geojson"
+    monterrey_geojsons[f"{first_index}-{second_index}"] = gpd.read_file(file_path)
+
+boston_geojsons = {}
+for i in range(10):
+    if(i == 0):
+        first_index = i*1000+1
+    else:
+        first_index = i*1000
+
+    second_index = (i+1)*1000
+    first_string = "Images "+f"{first_index} - {second_index}"
+    file_path = SRC_DATA_PATH/"boston"/first_string/f"building_data_{first_index}_{second_index}.geojson"
+    boston_geojsons[batches_names[i]] = gpd.read_file(file_path)
+
+#Now we simply merge the geojsons
+import pandas as pd
+gdf_monterrey = gpd.GeoDataFrame(
+    pd.concat(monterrey_geojsons, ignore_index=True),
+    crs=monterrey_geojsons[list(monterrey_geojsons.keys())[0]].crs
+)
+
+gdf_boston = gpd.GeoDataFrame(
+    pd.concat(boston_geojsons, ignore_index=True),
+    crs=boston_geojsons[list(boston_geojsons.keys())[0]].crs
+)
+
+gdf_all = gpd.GeoDataFrame(
+    pd.concat([gdf_monterrey, gdf_boston], ignore_index=True),
+    crs=gdf_boston.crs
+)
+
+gdf_all.head(5)
+
+```
+
+
+### Differentiating between training and validation
+
+We open the train/val data file which contains information about which instances were selected for validation and which for training per-city. 
+
+```{python}
+
+import json
+
+DICTIONARIES_PATH = "/Users/legariapena.j/Documents/imageable-2026/imageable/data/training_validation_data/data.json"
+
+with open(DICTIONARIES_PATH) as f:
+    data = json.load(f)
+
+#IDs Monterrey
+ids_monterrey_data = [x["building_id"] for x in data if x["city"] == "Monterrey"]
+#IDs Boston
+ids_boston_data = [x["building_id"] for x in data if x["city"] == "Boston"]
+#Data types (train vs. val) Monterrey
+data_type_monterrey = {x["building_id"]: x["data_type"] for x in data if x["city"] == "Monterrey"}
+#Data types (train vs. val) Boston
+data_type_boston = {x["building_id"]: x["data_type"] for x in data if x["city"] == "Boston"}
+
+gdf_monterrey_data = gdf_monterrey[gdf_monterrey["building_id"].isin(ids_monterrey_data)]
+gdf_boston_data = gdf_boston[gdf_boston["building_id"].isin(ids_boston_data)]
+
+#Now we tag according to the data type
+gdf_monterrey_data["data_type"] = [data_type_monterrey[b] for b in gdf_monterrey_data["building_id"]]
+gdf_boston_data["data_type"] = [data_type_boston[b] for b in gdf_boston_data["building_id"]]
+
+```
+
+### Plot Monterrey
+
+Let's use `display_footprints_categorical` to display the training and validation buildings for Monterrey. 
+
+```{python}
+#We can now add all buildings that are not in the training/validation set as unlabelled data
+ground_truth_monterrey = ground_truth_monterrey.to_crs(gdf_monterrey_data.crs)
+ground_truth_monterrey["data_type"] = "Not in either"
+monterrey_labels = ground_truth_monterrey["building_id"].map(data_type_monterrey)
+ground_truth_monterrey.loc[monterrey_labels.notna(), "data_type"] = monterrey_labels.dropna()
+
+from imageable.visualization.footprints_2d import display_footprints_categorical
+
+import os
+
+CARTO_API_KEY = os.environ.get("CARTO_API_KEY")
+
+DRACULA_PINK = "#ff79c6"
+DRACULA_CYAN = "#8BE9FD"
+DRACULA_COMMENT = "#6272a4"
+
+plot_mty = ground_truth_monterrey.copy()
+plot_mty["data_type"] = pd.Categorical(
+    plot_mty["data_type"],
+    categories=["train", "validation", "Not in either"],
+    ordered=True,
+)
+plot_mty = plot_mty.sort_values("data_type")
+
+n_train = (plot_mty["data_type"] == "train").sum()
+n_val = (plot_mty["data_type"] == "validation").sum()
+n_other = (plot_mty["data_type"] == "Not in either").sum()
+
+display_footprints_categorical(
+    gdf=plot_mty,
+    column="data_type",
+    colors=[DRACULA_PINK, DRACULA_CYAN, DRACULA_COMMENT],
+    base_gdf=all_buildings_monterrey,
+    title="Monterrey",
+    subtitle=f"Training: {n_train:,}    Validation: {n_val:,}    Discarded: {n_other:,}",
+    title_y=1.16,
+    subtitle_y=1.05,
+    annotate_counts=False,
+    focus_on_gdf_bounds=True,
+    add_basemap=True,
+    basemap_source = "CartoDB.Positron",
+    basemap_api_key = CARTO_API_KEY,
+    width = 7,
+    height = 7,
+    save_path = "/Users/legariapena.j/Documents/imageable-2026/imageable/data/paper_images/train_validation_monterrey.jpg"
+)
+
+```
+
+
+### Plot Boston
+And now let's show the training and validation sets for Boston. 
+
+```{python}
+ground_truth_boston = ground_truth_boston.to_crs(gdf_boston_data.crs)
+ground_truth_boston["data_type"] = "Not in either"
+
+
+indices_boston_local = [int(b.split("_")[-1]) - 1 for b in ids_boston_data]
+boston_data_types = [data_type_boston[b] for b in ids_boston_data]
+ground_truth_boston.loc[indices_boston_local, "data_type"] = boston_data_types
+
+plot_boston = ground_truth_boston.copy()
+plot_boston["data_type"] = pd.Categorical(
+    plot_boston["data_type"],
+    categories=["train", "validation", "Not in either"],
+    ordered=True,
+)
+plot_boston = plot_boston.sort_values("data_type")
+
+n_train_boston = (plot_boston["data_type"] == "train").sum()
+n_val_boston = (plot_boston["data_type"] == "validation").sum()
+n_other_boston = (plot_boston["data_type"] == "Not in either").sum()
+
+display_footprints_categorical(
+    gdf=plot_boston,
+    column="data_type",
+    colors=[DRACULA_PINK, DRACULA_CYAN, DRACULA_COMMENT],
+    base_gdf=all_buildings_boston,
+    title="Boston",
+    subtitle=f"Training: {n_train_boston:,}    Validation: {n_val_boston:,}    Discarded: {n_other_boston:,}",
+    title_y=1.20,
+    subtitle_y=1.05,
+    annotate_counts=False,
+    focus_on_gdf_bounds=True,
+    add_basemap=True,
+    basemap_source = "CartoDB.Positron",
+    basemap_api_key = CARTO_API_KEY,
+    width=12,
+    height=5,
+    buffer_meters = 4,
+    save_path="/Users/legariapena.j/Documents/imageable-2026/imageable/data/paper_images/train_validation_boston.jpg",
+)
+
+```
