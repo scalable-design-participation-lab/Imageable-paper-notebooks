@@ -1,6 +1,6 @@
 
 ---
-title: Clustering Wheel Visualization
+title: RMSE by City and Cluster 
 author: Uriel Legaria
 format: html
 jupyter: imageable
