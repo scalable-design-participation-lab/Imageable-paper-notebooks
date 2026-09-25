@@ -25,7 +25,7 @@ CARTO_API_KEY = os.environ.get("CARTO_API_KEY")
 
 BATCHES_NAMES = ["1-1000","1000-2000","2000-3000", "3000-4000", "4000-5000", "5000-6000", "6000-7000", "7000=8000", "8000-9000", "9000-10000"]
 
-#Open all monterrey feature geojsons
+#Open all Monterrey feature GeoJSONs
 monterrey_geojsons = {}
 for i in [0, 1, 2, 3, 4, 5, 20, 21, 22, 23, 24, 25, 26]:
     if(i == 0):
@@ -52,7 +52,7 @@ for i in range(10):
 
 ```
 
-### Expand the material into multiple columns and merge the GDFs into one
+### Expand the material column into multiple columns and merge the GDFs into one
 
 ```{python}
 import ast
@@ -128,7 +128,7 @@ gdf_all = gpd.GeoDataFrame(
 
 #### Opening the validation data
 
-We will work with the validation footprints only. We need to know which of the `building_ids` are validation. 
+We will work with the validation footprints only. We need to know which of the `building_ids` are in the validation set. 
 
 ```{python}
 DICTIONARIES_PATH = "/Users/legariapena.j/Documents/imageable-2026/imageable/data/training_validation_data/data.json"
@@ -192,7 +192,7 @@ monterrey_validation_data["Predicted Height"] = predicted_heights_monterrey
 boston_validation_data["Predicted Height"] = predicted_heights_boston
 ```
 
-#### Height Cloropleths (2D)
+#### Height Choropleths (2D)
 
 
 ```{python}
@@ -253,7 +253,7 @@ display_footprints_continuous(
 )
 ```
 
-### Material Cloropleths (2D)
+### Material Choropleths (2D)
 
 ```{python}
 #Compact the list of materials to a valid set
@@ -432,7 +432,7 @@ import json
 import cmcrameri.cm as cmc
 from imageable.visualization.footprints import visualize_heights
 
-#Clip the height values between the 1 and 99 percentiles
+#Clip the height values between the 1st and 99th percentiles
 min_percentile = 1
 max_percentile = 99
 min_value = np.nanpercentile(monterrey_validation_data["Predicted Height"], min_percentile)
@@ -454,7 +454,7 @@ deck_h
 ```
 
 ```{python}
-#Let's do the same for boston
+#Let's do the same for Boston
 min_percentile = 1
 max_percentile = 99
 min_value = np.nanpercentile(boston_validation_data["Predicted Height"], min_percentile)

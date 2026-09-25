@@ -8,7 +8,7 @@
 
 <meta name="author" content="Uriel Legaria">
 
-<title>Training and Validation datasets.</title>
+<title>Training and Validation Datasets</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -91,7 +91,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Training and Validation datasets.</h1>
+<h1 class="title">Training and Validation Datasets</h1>
 </div>
 
 
@@ -114,78 +114,76 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>The desired output in this notebook are images of the training and validation datasets for the two environments we considered in the <em>Imageable</em> paper: Monterrey (distritotec) and Boston.</p>
+<p>The desired outputs in this notebook are images of the training and validation datasets for the two environments we considered in the <em>Imageable</em> paper: Monterrey (distritotec) and Boston.</p>
 <section id="opening-the-footprint-data" class="level4">
 <h4 class="anchored" data-anchor-id="opening-the-footprint-data">Opening the footprint data</h4>
-<div id="40449b79" class="cell" data-execution_count="1">
+<div id="0cd7e025" class="cell" data-execution_count="1">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> geopandas <span class="im">as</span> gpd</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>SRC_DATA_PATH <span class="op">=</span> Path(<span class="st">"/Users/legariapena.j/Library/CloudStorage/GoogleDrive-legariapena.j@husky.neu.edu/Shared drives/Cool and Carbon Free Africa/Building Image Datasets/data"</span>)</span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>SRC_DATA_PATH <span class="op">=</span> Path(<span class="st">"/Users/legariapena.j/Library/CloudStorage/GoogleDrive-legariapena.j@husky.neu.edu/Shared drives/Cool and Carbon Free Africa/Building Image Datasets/data"</span>)</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co">#Ground truth monterrey</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>ground_truth_monterrey_path <span class="op">=</span> SRC_DATA_PATH<span class="op">/</span><span class="st">"monterrey"</span><span class="op">/</span><span class="st">"footprints"</span><span class="op">/</span><span class="st">"labelled_buildings_expanded.geojson"</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>ground_truth_monterrey <span class="op">=</span> gpd.read_file(ground_truth_monterrey_path)</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co">#All buildings monterrey</span></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>all_buildings_path_monterrey <span class="op">=</span> SRC_DATA_PATH<span class="op">/</span><span class="st">"monterrey"</span><span class="op">/</span><span class="st">"footprints"</span><span class="op">/</span><span class="st">"all_buildings_dedup.geojson"</span></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>all_buildings_monterrey <span class="op">=</span> gpd.read_file(all_buildings_path_monterrey)</span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="co">#Ground truth boston</span></span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>ground_truth_boston_path <span class="op">=</span> SRC_DATA_PATH<span class="op">/</span><span class="st">"boston"</span><span class="op">/</span><span class="st">"footprints"</span><span class="op">/</span><span class="st">"labelled_buildings_meters.geojson"</span></span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>ground_truth_boston <span class="op">=</span> gpd.read_file(ground_truth_boston_path)</span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="co">#All buildings boston</span></span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>all_buildings_path_boston <span class="op">=</span> SRC_DATA_PATH<span class="op">/</span><span class="st">"boston"</span><span class="op">/</span><span class="st">"footprints"</span><span class="op">/</span><span class="st">"boston_buildings.geojson"</span></span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>all_buildings_boston <span class="op">=</span> gpd.read_file(all_buildings_path_boston)</span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>batches_names <span class="op">=</span> [<span class="st">"1-1000"</span>,<span class="st">"1000-2000"</span>,<span class="st">"2000-3000"</span>, <span class="st">"3000-4000"</span>, <span class="st">"4000-5000"</span>, <span class="st">"5000-6000"</span>, <span class="st">"6000-7000"</span>, <span class="st">"7000=8000"</span>, <span class="st">"8000-9000"</span>, <span class="st">"9000-10000"</span>]</span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="co">#Open all monterrey feature geojsons (batches)</span></span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>monterrey_geojsons <span class="op">=</span> {}</span>
-<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> [<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>, <span class="dv">5</span>, <span class="dv">20</span>, <span class="dv">21</span>, <span class="dv">22</span>, <span class="dv">23</span>, <span class="dv">24</span>, <span class="dv">25</span>, <span class="dv">26</span>]:</span>
-<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span>(i <span class="op">==</span> <span class="dv">0</span>):</span>
-<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>        first_index <span class="op">=</span> i<span class="op">*</span><span class="dv">1000</span><span class="op">+</span><span class="dv">1</span></span>
-<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
-<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>        first_index <span class="op">=</span> i<span class="op">*</span><span class="dv">1000</span></span>
-<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>    second_index <span class="op">=</span> (i<span class="op">+</span><span class="dv">1</span>)<span class="op">*</span><span class="dv">1000</span></span>
-<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>    first_string <span class="op">=</span> <span class="st">"Images "</span><span class="op">+</span><span class="ss">f"</span><span class="sc">{</span>first_index<span class="sc">}</span><span class="ss"> - </span><span class="sc">{</span>second_index<span class="sc">}</span><span class="ss">"</span></span>
-<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>    file_path <span class="op">=</span> SRC_DATA_PATH<span class="op">/</span><span class="st">"monterrey_dedup"</span><span class="op">/</span>first_string<span class="op">/</span><span class="ss">f"building_data_</span><span class="sc">{</span>first_index<span class="sc">}</span><span class="ss">_</span><span class="sc">{</span>second_index<span class="sc">}</span><span class="ss">.geojson"</span></span>
-<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>    monterrey_geojsons[<span class="ss">f"</span><span class="sc">{</span>first_index<span class="sc">}</span><span class="ss">-</span><span class="sc">{</span>second_index<span class="sc">}</span><span class="ss">"</span>] <span class="op">=</span> gpd.read_file(file_path)</span>
-<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>boston_geojsons <span class="op">=</span> {}</span>
-<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">10</span>):</span>
-<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span>(i <span class="op">==</span> <span class="dv">0</span>):</span>
-<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>        first_index <span class="op">=</span> i<span class="op">*</span><span class="dv">1000</span><span class="op">+</span><span class="dv">1</span></span>
-<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
-<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>        first_index <span class="op">=</span> i<span class="op">*</span><span class="dv">1000</span></span>
-<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>    second_index <span class="op">=</span> (i<span class="op">+</span><span class="dv">1</span>)<span class="op">*</span><span class="dv">1000</span></span>
-<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>    first_string <span class="op">=</span> <span class="st">"Images "</span><span class="op">+</span><span class="ss">f"</span><span class="sc">{</span>first_index<span class="sc">}</span><span class="ss"> - </span><span class="sc">{</span>second_index<span class="sc">}</span><span class="ss">"</span></span>
-<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>    file_path <span class="op">=</span> SRC_DATA_PATH<span class="op">/</span><span class="st">"boston"</span><span class="op">/</span>first_string<span class="op">/</span><span class="ss">f"building_data_</span><span class="sc">{</span>first_index<span class="sc">}</span><span class="ss">_</span><span class="sc">{</span>second_index<span class="sc">}</span><span class="ss">.geojson"</span></span>
-<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a>    boston_geojsons[batches_names[i]] <span class="op">=</span> gpd.read_file(file_path)</span>
-<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a><span class="co">#Now we simply merge the geojsons</span></span>
-<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
-<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a>gdf_monterrey <span class="op">=</span> gpd.GeoDataFrame(</span>
-<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a>    pd.concat(monterrey_geojsons, ignore_index<span class="op">=</span><span class="va">True</span>),</span>
-<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a>    crs<span class="op">=</span>monterrey_geojsons[<span class="bu">list</span>(monterrey_geojsons.keys())[<span class="dv">0</span>]].crs</span>
-<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a>gdf_boston <span class="op">=</span> gpd.GeoDataFrame(</span>
-<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a>    pd.concat(boston_geojsons, ignore_index<span class="op">=</span><span class="va">True</span>),</span>
-<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a>    crs<span class="op">=</span>boston_geojsons[<span class="bu">list</span>(boston_geojsons.keys())[<span class="dv">0</span>]].crs</span>
-<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a>gdf_all <span class="op">=</span> gpd.GeoDataFrame(</span>
-<span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a>    pd.concat([gdf_monterrey, gdf_boston], ignore_index<span class="op">=</span><span class="va">True</span>),</span>
-<span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a>    crs<span class="op">=</span>gdf_boston.crs</span>
-<span id="cb1-66"><a href="#cb1-66" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb1-67"><a href="#cb1-67" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-68"><a href="#cb1-68" aria-hidden="true" tabindex="-1"></a>gdf_all.head(<span class="dv">5</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co">#Ground truth Monterrey</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>ground_truth_monterrey_path <span class="op">=</span> SRC_DATA_PATH<span class="op">/</span><span class="st">"monterrey"</span><span class="op">/</span><span class="st">"footprints"</span><span class="op">/</span><span class="st">"labelled_buildings_expanded.geojson"</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>ground_truth_monterrey <span class="op">=</span> gpd.read_file(ground_truth_monterrey_path)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co">#All buildings Monterrey</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>all_buildings_path_monterrey <span class="op">=</span> SRC_DATA_PATH<span class="op">/</span><span class="st">"monterrey"</span><span class="op">/</span><span class="st">"footprints"</span><span class="op">/</span><span class="st">"all_buildings_dedup.geojson"</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>all_buildings_monterrey <span class="op">=</span> gpd.read_file(all_buildings_path_monterrey)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="co">#Ground truth Boston</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>ground_truth_boston_path <span class="op">=</span> SRC_DATA_PATH<span class="op">/</span><span class="st">"boston"</span><span class="op">/</span><span class="st">"footprints"</span><span class="op">/</span><span class="st">"labelled_buildings_meters.geojson"</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>ground_truth_boston <span class="op">=</span> gpd.read_file(ground_truth_boston_path)</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="co">#All buildings Boston</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>all_buildings_path_boston <span class="op">=</span> SRC_DATA_PATH<span class="op">/</span><span class="st">"boston"</span><span class="op">/</span><span class="st">"footprints"</span><span class="op">/</span><span class="st">"boston_buildings.geojson"</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>all_buildings_boston <span class="op">=</span> gpd.read_file(all_buildings_path_boston)</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>batches_names <span class="op">=</span> [<span class="st">"1-1000"</span>,<span class="st">"1000-2000"</span>,<span class="st">"2000-3000"</span>, <span class="st">"3000-4000"</span>, <span class="st">"4000-5000"</span>, <span class="st">"5000-6000"</span>, <span class="st">"6000-7000"</span>, <span class="st">"7000=8000"</span>, <span class="st">"8000-9000"</span>, <span class="st">"9000-10000"</span>]</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="co">#Open all Monterrey feature GeoJSONs (batches)</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>monterrey_geojsons <span class="op">=</span> {}</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> [<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>, <span class="dv">5</span>, <span class="dv">20</span>, <span class="dv">21</span>, <span class="dv">22</span>, <span class="dv">23</span>, <span class="dv">24</span>, <span class="dv">25</span>, <span class="dv">26</span>]:</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span>(i <span class="op">==</span> <span class="dv">0</span>):</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>        first_index <span class="op">=</span> i<span class="op">*</span><span class="dv">1000</span><span class="op">+</span><span class="dv">1</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>        first_index <span class="op">=</span> i<span class="op">*</span><span class="dv">1000</span></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>    second_index <span class="op">=</span> (i<span class="op">+</span><span class="dv">1</span>)<span class="op">*</span><span class="dv">1000</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>    first_string <span class="op">=</span> <span class="st">"Images "</span><span class="op">+</span><span class="ss">f"</span><span class="sc">{</span>first_index<span class="sc">}</span><span class="ss"> - </span><span class="sc">{</span>second_index<span class="sc">}</span><span class="ss">"</span></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>    file_path <span class="op">=</span> SRC_DATA_PATH<span class="op">/</span><span class="st">"monterrey_dedup"</span><span class="op">/</span>first_string<span class="op">/</span><span class="ss">f"building_data_</span><span class="sc">{</span>first_index<span class="sc">}</span><span class="ss">_</span><span class="sc">{</span>second_index<span class="sc">}</span><span class="ss">.geojson"</span></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>    monterrey_geojsons[<span class="ss">f"</span><span class="sc">{</span>first_index<span class="sc">}</span><span class="ss">-</span><span class="sc">{</span>second_index<span class="sc">}</span><span class="ss">"</span>] <span class="op">=</span> gpd.read_file(file_path)</span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>boston_geojsons <span class="op">=</span> {}</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">10</span>):</span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span>(i <span class="op">==</span> <span class="dv">0</span>):</span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>        first_index <span class="op">=</span> i<span class="op">*</span><span class="dv">1000</span><span class="op">+</span><span class="dv">1</span></span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>        first_index <span class="op">=</span> i<span class="op">*</span><span class="dv">1000</span></span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>    second_index <span class="op">=</span> (i<span class="op">+</span><span class="dv">1</span>)<span class="op">*</span><span class="dv">1000</span></span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>    first_string <span class="op">=</span> <span class="st">"Images "</span><span class="op">+</span><span class="ss">f"</span><span class="sc">{</span>first_index<span class="sc">}</span><span class="ss"> - </span><span class="sc">{</span>second_index<span class="sc">}</span><span class="ss">"</span></span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>    file_path <span class="op">=</span> SRC_DATA_PATH<span class="op">/</span><span class="st">"boston"</span><span class="op">/</span>first_string<span class="op">/</span><span class="ss">f"building_data_</span><span class="sc">{</span>first_index<span class="sc">}</span><span class="ss">_</span><span class="sc">{</span>second_index<span class="sc">}</span><span class="ss">.geojson"</span></span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>    boston_geojsons[batches_names[i]] <span class="op">=</span> gpd.read_file(file_path)</span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a><span class="co">#Now we simply merge the GeoJSONs</span></span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a>gdf_monterrey <span class="op">=</span> gpd.GeoDataFrame(</span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a>    pd.concat(monterrey_geojsons, ignore_index<span class="op">=</span><span class="va">True</span>),</span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a>    crs<span class="op">=</span>monterrey_geojsons[<span class="bu">list</span>(monterrey_geojsons.keys())[<span class="dv">0</span>]].crs</span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a>gdf_boston <span class="op">=</span> gpd.GeoDataFrame(</span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a>    pd.concat(boston_geojsons, ignore_index<span class="op">=</span><span class="va">True</span>),</span>
+<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a>    crs<span class="op">=</span>boston_geojsons[<span class="bu">list</span>(boston_geojsons.keys())[<span class="dv">0</span>]].crs</span>
+<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a>gdf_all <span class="op">=</span> gpd.GeoDataFrame(</span>
+<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a>    pd.concat([gdf_monterrey, gdf_boston], ignore_index<span class="op">=</span><span class="va">True</span>),</span>
+<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a>    crs<span class="op">=</span>gdf_boston.crs</span>
+<span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-66"><a href="#cb1-66" aria-hidden="true" tabindex="-1"></a>gdf_all.head(<span class="dv">5</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-display" data-execution_count="1">
 <div>
 
@@ -348,8 +346,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="differentiating-between-training-and-validation" class="level3">
 <h3 class="anchored" data-anchor-id="differentiating-between-training-and-validation">Differentiating between training and validation</h3>
-<p>We open the train/val data file which contains information about which instances were selected for validation and which for training per-city.</p>
-<div id="805e71f6" class="cell" data-execution_count="2">
+<p>We open the train/val data file, which contains information about which instances were selected for validation and which for training per city.</p>
+<div id="c3a515ee" class="cell" data-execution_count="2">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> json</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>DICTIONARIES_PATH <span class="op">=</span> <span class="st">"/Users/legariapena.j/Documents/imageable-2026/imageable/data/training_validation_data/data.json"</span></span>
@@ -377,7 +375,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="plot-monterrey" class="level3">
 <h3 class="anchored" data-anchor-id="plot-monterrey">Plot Monterrey</h3>
 <p>Let’s use <code>display_footprints_categorical</code> to display the training and validation buildings for Monterrey.</p>
-<div id="077095a6" class="cell" data-execution_count="3">
+<div id="56a92632" class="cell" data-execution_count="3">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">#We can now add all buildings that are not in the training/validation set as unlabelled data</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>ground_truth_monterrey <span class="op">=</span> ground_truth_monterrey.to_crs(gdf_monterrey_data.crs)</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>ground_truth_monterrey[<span class="st">"data_type"</span>] <span class="op">=</span> <span class="st">"Not in either"</span></span>
@@ -436,46 +434,45 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="plot-boston" class="level3">
 <h3 class="anchored" data-anchor-id="plot-boston">Plot Boston</h3>
 <p>And now let’s show the training and validation sets for Boston.</p>
-<div id="1e7edba3" class="cell" data-execution_count="4">
+<div id="31b73196" class="cell" data-execution_count="4">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>ground_truth_boston <span class="op">=</span> ground_truth_boston.to_crs(gdf_boston_data.crs)</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>ground_truth_boston[<span class="st">"data_type"</span>] <span class="op">=</span> <span class="st">"Not in either"</span></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>indices_boston_local <span class="op">=</span> [<span class="bu">int</span>(b.split(<span class="st">"_"</span>)[<span class="op">-</span><span class="dv">1</span>]) <span class="op">-</span> <span class="dv">1</span> <span class="cf">for</span> b <span class="kw">in</span> ids_boston_data]</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>boston_data_types <span class="op">=</span> [data_type_boston[b] <span class="cf">for</span> b <span class="kw">in</span> ids_boston_data]</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>ground_truth_boston.loc[indices_boston_local, <span class="st">"data_type"</span>] <span class="op">=</span> boston_data_types</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>plot_boston <span class="op">=</span> ground_truth_boston.copy()</span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>plot_boston[<span class="st">"data_type"</span>] <span class="op">=</span> pd.Categorical(</span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    plot_boston[<span class="st">"data_type"</span>],</span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    categories<span class="op">=</span>[<span class="st">"train"</span>, <span class="st">"validation"</span>, <span class="st">"Not in either"</span>],</span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    ordered<span class="op">=</span><span class="va">True</span>,</span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>plot_boston <span class="op">=</span> plot_boston.sort_values(<span class="st">"data_type"</span>)</span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>n_train_boston <span class="op">=</span> (plot_boston[<span class="st">"data_type"</span>] <span class="op">==</span> <span class="st">"train"</span>).<span class="bu">sum</span>()</span>
-<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>n_val_boston <span class="op">=</span> (plot_boston[<span class="st">"data_type"</span>] <span class="op">==</span> <span class="st">"validation"</span>).<span class="bu">sum</span>()</span>
-<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>n_other_boston <span class="op">=</span> (plot_boston[<span class="st">"data_type"</span>] <span class="op">==</span> <span class="st">"Not in either"</span>).<span class="bu">sum</span>()</span>
-<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>display_footprints_categorical(</span>
-<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>    gdf<span class="op">=</span>plot_boston,</span>
-<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>    column<span class="op">=</span><span class="st">"data_type"</span>,</span>
-<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>    colors<span class="op">=</span>[DRACULA_PINK, DRACULA_CYAN, DRACULA_COMMENT],</span>
-<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>    base_gdf<span class="op">=</span>all_buildings_boston,</span>
-<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>    title<span class="op">=</span><span class="st">"Boston"</span>,</span>
-<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>    subtitle<span class="op">=</span><span class="ss">f"Training: </span><span class="sc">{</span>n_train_boston<span class="sc">:,}</span><span class="ss">    Validation: </span><span class="sc">{</span>n_val_boston<span class="sc">:,}</span><span class="ss">    Discarded: </span><span class="sc">{</span>n_other_boston<span class="sc">:,}</span><span class="ss">"</span>,</span>
-<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>    title_y<span class="op">=</span><span class="fl">1.20</span>,</span>
-<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>    subtitle_y<span class="op">=</span><span class="fl">1.05</span>,</span>
-<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>    annotate_counts<span class="op">=</span><span class="va">False</span>,</span>
-<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>    focus_on_gdf_bounds<span class="op">=</span><span class="va">True</span>,</span>
-<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>    add_basemap<span class="op">=</span><span class="va">True</span>,</span>
-<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>    basemap_source <span class="op">=</span> <span class="st">"CartoDB.Positron"</span>,</span>
-<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>    basemap_api_key <span class="op">=</span> CARTO_API_KEY,</span>
-<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>    width<span class="op">=</span><span class="dv">12</span>,</span>
-<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>    height<span class="op">=</span><span class="dv">5</span>,</span>
-<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>    buffer_meters <span class="op">=</span> <span class="dv">4</span>,</span>
-<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>    save_path<span class="op">=</span><span class="st">"/Users/legariapena.j/Documents/imageable-2026/imageable/data/paper_images/train_validation_boston.jpg"</span>,</span>
-<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>indices_boston_local <span class="op">=</span> [<span class="bu">int</span>(b.split(<span class="st">"_"</span>)[<span class="op">-</span><span class="dv">1</span>]) <span class="op">-</span> <span class="dv">1</span> <span class="cf">for</span> b <span class="kw">in</span> ids_boston_data]</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>boston_data_types <span class="op">=</span> [data_type_boston[b] <span class="cf">for</span> b <span class="kw">in</span> ids_boston_data]</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>ground_truth_boston.loc[indices_boston_local, <span class="st">"data_type"</span>] <span class="op">=</span> boston_data_types</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>plot_boston <span class="op">=</span> ground_truth_boston.copy()</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>plot_boston[<span class="st">"data_type"</span>] <span class="op">=</span> pd.Categorical(</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    plot_boston[<span class="st">"data_type"</span>],</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    categories<span class="op">=</span>[<span class="st">"train"</span>, <span class="st">"validation"</span>, <span class="st">"Not in either"</span>],</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    ordered<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>plot_boston <span class="op">=</span> plot_boston.sort_values(<span class="st">"data_type"</span>)</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>n_train_boston <span class="op">=</span> (plot_boston[<span class="st">"data_type"</span>] <span class="op">==</span> <span class="st">"train"</span>).<span class="bu">sum</span>()</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>n_val_boston <span class="op">=</span> (plot_boston[<span class="st">"data_type"</span>] <span class="op">==</span> <span class="st">"validation"</span>).<span class="bu">sum</span>()</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>n_other_boston <span class="op">=</span> (plot_boston[<span class="st">"data_type"</span>] <span class="op">==</span> <span class="st">"Not in either"</span>).<span class="bu">sum</span>()</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>display_footprints_categorical(</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>    gdf<span class="op">=</span>plot_boston,</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>    column<span class="op">=</span><span class="st">"data_type"</span>,</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>    colors<span class="op">=</span>[DRACULA_PINK, DRACULA_CYAN, DRACULA_COMMENT],</span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>    base_gdf<span class="op">=</span>all_buildings_boston,</span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>    title<span class="op">=</span><span class="st">"Boston"</span>,</span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>    subtitle<span class="op">=</span><span class="ss">f"Training: </span><span class="sc">{</span>n_train_boston<span class="sc">:,}</span><span class="ss">    Validation: </span><span class="sc">{</span>n_val_boston<span class="sc">:,}</span><span class="ss">    Discarded: </span><span class="sc">{</span>n_other_boston<span class="sc">:,}</span><span class="ss">"</span>,</span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>    title_y<span class="op">=</span><span class="fl">1.20</span>,</span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>    subtitle_y<span class="op">=</span><span class="fl">1.05</span>,</span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>    annotate_counts<span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>    focus_on_gdf_bounds<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>    add_basemap<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>    basemap_source <span class="op">=</span> <span class="st">"CartoDB.Positron"</span>,</span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>    basemap_api_key <span class="op">=</span> CARTO_API_KEY,</span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>    width<span class="op">=</span><span class="dv">12</span>,</span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>    height<span class="op">=</span><span class="dv">5</span>,</span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>    buffer_meters <span class="op">=</span> <span class="dv">4</span>,</span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>    save_path<span class="op">=</span><span class="st">"/Users/legariapena.j/Documents/imageable-2026/imageable/data/paper_images/train_validation_boston.jpg"</span>,</span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">

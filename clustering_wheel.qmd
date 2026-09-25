@@ -24,10 +24,10 @@ SRC_DATA_PATH = Path("/Users/legariapena.j/Library/CloudStorage/GoogleDrive-lega
 ground_truth_monterrey_path = SRC_DATA_PATH/"monterrey"/"footprints"/"labelled_buildings_expanded.geojson"
 ground_truth_monterrey = gpd.read_file(ground_truth_monterrey_path)
 
-#From here we need to do our typical workflow: (1) open the batch notebooks, and (2) merge them.
+#From here we need to do our typical workflow: (1) open the batch GeoJSONs, and (2) merge them.
 batches_names = ["1-1000","1000-2000","2000-3000", "3000-4000", "4000-5000", "5000-6000", "6000-7000", "7000=8000", "8000-9000", "9000-10000"]
 
-#Open all monterrey feature geojsons
+#Open all Monterrey feature GeoJSONs
 monterrey_geojsons = {}
 for i in [0, 1, 2, 3, 4, 5, 20, 21, 22, 23, 24, 25, 26]:
     if(i == 0):
@@ -67,7 +67,7 @@ gdf_boston = gpd.GeoDataFrame(
 gdf_boston.head()
 ```
 
-The problem with `gdf_boston` and `gdf_monterrey` is that the material column contains dictionaries which need to be parsed before we reduce the feature list to the 23 features we mentioned in the paper. 
+The problem with `gdf_boston` and `gdf_monterrey` is that the material column contains dictionaries that need to be parsed before we reduce the feature list to the 23 features we mentioned in the paper. 
 
 ### Parsing the material column
 ```{python}
@@ -110,7 +110,7 @@ def expand_materials(gdf):
 
     return gdf
 
-#Then we simply apply it to our geojsons
+#Then we simply apply it to our GeoJSONs
 gdf_monterrey = expand_materials(gdf_monterrey)
 gdf_boston = expand_materials(gdf_boston)
 
@@ -126,7 +126,7 @@ gdf_all
 
 ### Opening the building dictionaries
 
-At this point we have the footprint data which will allow us to show representative footprint polygons in the Cluster Wheel. Now let's open the data dictionaries, which contain information about what cluster the buildings are mapped into. 
+At this point we have the footprint data, which will allow us to show representative footprint polygons in the Cluster Wheel. Now let's open the data dictionaries, which contain information about what cluster the buildings are mapped into. 
 
 ```{python}
 DICTIONARIES_PATH = "/Users/legariapena.j/Documents/imageable-2026/imageable/data/training_validation_data/data.json"
@@ -278,7 +278,7 @@ def image_path_for(city: str, building_id: str) -> Path:
     prev_candidate = ROOT / "data" / city / prev_folder / str(building_id) / "image.jpg"
     return prev_candidate
 
-#We need the model to get the centroids of the clusters. As we want the representative images/footprints to be close to those centroids. 
+#We need the model to get the centroids of the clusters, as we want the representative images/footprints to be close to those centroids. 
 model = joblib.load("/Users/legariapena.j/Documents/imageable-2026/imageable/data/models/cluster_ensemble_model.pkl")
 
 scaler = joblib.load("/Users/legariapena.j/Documents/imageable-2026/imageable/data/models/cluster_ensemble_scaler.pkl")
@@ -287,11 +287,11 @@ full_feature_names = list(data[0]["feature_names"])
 cluster_feature_indices = list(model.feature_indices_used_for_clustering)
 centers = model.cluster_centers_
 
-#Here you can pick the k-th closest data point that you want to show. This is necessary because the image retrieval is not perfect and might contains some canyon views.
+#Here you can pick the k-th closest data point that you want to show. This is necessary because the image retrieval is not perfect and might contain some canyon views.
 
 centroid_pick_rank = [0, 6, 2, 2, 3, 2]
 
-#The number 6 means that we are showing the 6-th building closest to the centroid for the 2nd cluster.
+#The number 6 means that we are showing the 7th building closest to the centroid for the 2nd cluster.
 
 for i in range(n_clusters):
     gdf = clusters_gdfs[i].copy()
@@ -367,7 +367,7 @@ ax[1].set_axis_off()
 
 #### Representative material
 
-Get the material with the highest representation in the cluster.
+Get the material with the highest representation in the representative building.
 
 ```{python}
 VALID_MATERIALS = ["concrete", "metal", "glass", "plastic", "asphalt","brick", "human_body", "wood", "plaster", "leaf"]

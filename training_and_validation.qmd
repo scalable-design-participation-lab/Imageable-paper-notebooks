@@ -1,5 +1,5 @@
 ---
-title: Training and Validation datasets.
+title: Training and Validation Datasets
 author: Uriel Legaria
 format: html
 jupyter: imageable
@@ -8,7 +8,7 @@ execute:
   message: false
 ---
 
-The desired output in this notebook are images of the training and validation datasets for the two environments we considered in the *Imageable* paper: Monterrey (distritotec) and Boston. 
+The desired outputs in this notebook are images of the training and validation datasets for the two environments we considered in the *Imageable* paper: Monterrey (distritotec) and Boston. 
 
 #### Opening the footprint data
 
@@ -19,25 +19,25 @@ import geopandas as gpd
 
 SRC_DATA_PATH = Path("/Users/legariapena.j/Library/CloudStorage/GoogleDrive-legariapena.j@husky.neu.edu/Shared drives/Cool and Carbon Free Africa/Building Image Datasets/data")
 
-#Ground truth monterrey
+#Ground truth Monterrey
 ground_truth_monterrey_path = SRC_DATA_PATH/"monterrey"/"footprints"/"labelled_buildings_expanded.geojson"
 ground_truth_monterrey = gpd.read_file(ground_truth_monterrey_path)
 
-#All buildings monterrey
+#All buildings Monterrey
 all_buildings_path_monterrey = SRC_DATA_PATH/"monterrey"/"footprints"/"all_buildings_dedup.geojson"
 all_buildings_monterrey = gpd.read_file(all_buildings_path_monterrey)
 
-#Ground truth boston
+#Ground truth Boston
 ground_truth_boston_path = SRC_DATA_PATH/"boston"/"footprints"/"labelled_buildings_meters.geojson"
 ground_truth_boston = gpd.read_file(ground_truth_boston_path)
 
-#All buildings boston
+#All buildings Boston
 all_buildings_path_boston = SRC_DATA_PATH/"boston"/"footprints"/"boston_buildings.geojson"
 all_buildings_boston = gpd.read_file(all_buildings_path_boston)
 
 
 batches_names = ["1-1000","1000-2000","2000-3000", "3000-4000", "4000-5000", "5000-6000", "6000-7000", "7000=8000", "8000-9000", "9000-10000"]
-#Open all monterrey feature geojsons (batches)
+#Open all Monterrey feature GeoJSONs (batches)
 monterrey_geojsons = {}
 for i in [0, 1, 2, 3, 4, 5, 20, 21, 22, 23, 24, 25, 26]:
     if(i == 0):
@@ -62,7 +62,7 @@ for i in range(10):
     file_path = SRC_DATA_PATH/"boston"/first_string/f"building_data_{first_index}_{second_index}.geojson"
     boston_geojsons[batches_names[i]] = gpd.read_file(file_path)
 
-#Now we simply merge the geojsons
+#Now we simply merge the GeoJSONs
 import pandas as pd
 gdf_monterrey = gpd.GeoDataFrame(
     pd.concat(monterrey_geojsons, ignore_index=True),
@@ -86,7 +86,7 @@ gdf_all.head(5)
 
 ### Differentiating between training and validation
 
-We open the train/val data file which contains information about which instances were selected for validation and which for training per-city. 
+We open the train/val data file, which contains information about which instances were selected for validation and which for training per city. 
 
 ```{python}
 
