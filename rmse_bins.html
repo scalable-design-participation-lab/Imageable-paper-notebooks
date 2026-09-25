@@ -8,7 +8,7 @@
 
 <meta name="author" content="Uriel Legaria">
 
-<title>Clustering Wheel Visualization</title>
+<title>RMSE by City and Cluster</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -117,7 +117,7 @@ window.Quarto = {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Clustering Wheel Visualization</h1>
+<h1 class="title">RMSE by City and Cluster</h1>
 </div>
 
 
@@ -149,7 +149,7 @@ window.Quarto = {
 <section id="defining-the-error-functions" class="level3">
 <h3 class="anchored" data-anchor-id="defining-the-error-functions">Defining the error functions</h3>
 <p>Let’s define functions to compute <span class="math inline">\(RMSE\)</span> and also <span class="math inline">\(MAE\)</span>. I will only show <span class="math inline">\(RMSE\)</span> but the type of error computed could be switched by calling the <code>compute_mae</code> function.</p>
-<div id="9d80c36e" class="cell" data-execution_count="1">
+<div id="bdc0d539" class="cell" data-execution_count="1">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> compute_mse(ground_truths, predicted_values):</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    mse <span class="op">=</span> <span class="dv">0</span></span>
@@ -184,7 +184,7 @@ window.Quarto = {
 </section>
 <section id="open-the-data-and-the-models" class="level3">
 <h3 class="anchored" data-anchor-id="open-the-data-and-the-models">Open the data and the models</h3>
-<div id="b350e1fb" class="cell" data-execution_count="2">
+<div id="9e35f0ce" class="cell" data-execution_count="2">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> joblib</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>MODEL_NAMES <span class="op">=</span> [<span class="st">"XGBoost-single"</span>, <span class="st">"XGBoost-footprints"</span>, <span class="st">"XGBoost-cluster-then-predict"</span>]</span>
@@ -216,7 +216,7 @@ window.Quarto = {
 </section>
 <section id="rmse-by-cluster" class="level3">
 <h3 class="anchored" data-anchor-id="rmse-by-cluster">RMSE by cluster</h3>
-<div id="e857f4c2" class="cell" data-execution_count="3">
+<div id="0fcd3cd3" class="cell" data-execution_count="3">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> imageable.visualization.data_visualization <span class="im">import</span> plot_grouped_distribution_bars</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>cluster_ids <span class="op">=</span> <span class="bu">sorted</span>(<span class="bu">list</span>(<span class="bu">set</span>(clusters)))</span>
@@ -307,7 +307,7 @@ window.Quarto = {
 </section>
 <section id="rmse-by-city" class="level3">
 <h3 class="anchored" data-anchor-id="rmse-by-city">RMSE by City</h3>
-<div id="48e00ddd" class="cell" data-execution_count="4">
+<div id="bdbb08f3" class="cell" data-execution_count="4">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Get the cities</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>cities <span class="op">=</span> [x[<span class="st">"city"</span>] <span class="cf">for</span> x <span class="kw">in</span> data]</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>city_names <span class="op">=</span> <span class="bu">sorted</span>(<span class="bu">list</span>(<span class="bu">set</span>(cities)))</span>
