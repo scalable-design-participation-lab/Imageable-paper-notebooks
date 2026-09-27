@@ -3,6 +3,7 @@ All the clean Quarto notebooks of the paper we submitted the EPB. I am currently
 
 To view the notebooks click on:
 
+* [Training the models](https://scalable-design-participation-lab.github.io/Imageable-paper-notebooks/training.html)
 * [Validation and Training](https://scalable-design-participation-lab.github.io/Imageable-paper-notebooks/training_and_validation.html)
 * [Clustering wheel visualization](https://scalable-design-participation-lab.github.io/Imageable-paper-notebooks/clustering_wheel.html)
 * [Height and materials visualization](https://scalable-design-participation-lab.github.io/Imageable-paper-notebooks/heights_and_materials.html)
