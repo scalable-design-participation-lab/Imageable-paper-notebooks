@@ -1,0 +1,79 @@
+---
+title: Vegetation + Brick percentages
+author: Uriel Legaria
+jupyter: imageable
+format: html
+---
+
+
+### Vegetation + Brick percentages
+One of the observations we make in the Results section is that more facades dominated by brick and vegetation were observed in Boston. As evidence we present the percentage of buildings dominated for each material per-city. We compute those in this notebook.
+
+
+#### Load the data
+
+```{python}
+DATA_PATH = "/Users/legariapena.j/Documents/imageable-2026/imageable/data/training_validation_data/data.json"
+
+import json
+with open(DATA_PATH, "r") as file:
+    data = json.load(file)
+```
+
+
+#### Separate validation instances for Boston and for Monterrey
+
+```{python}
+import numpy as np
+
+validation_instances_boston = [x for x in data if x["data_type"] == "validation" and x["city"] == "Boston"]
+validation_instances_monterrey = [x for x in data if x["data_type"] == "validation" and x["city"] == "Monterrey"]
+
+print(f"Number of Boston validation instances {len(validation_instances_boston)}")
+print(f"Number of Monterrey validation instances {len(validation_instances_monterrey)}")
+```
+
+### Extract the material percentages vectors for Boston and Monterrey
+
+```{python}
+feature_names = validation_instances_boston[0]["feature_names"]
+print(feature_names)
+
+MATERIALS = ['material_pct_concrete', 'material_pct_metal', 'material_pct_glass', 'material_pct_plastic', 'material_pct_asphalt', 'material_pct_brick', 'material_pct_human_body', 'material_pct_wood', 'material_pct_plaster', 'material_pct_leaf']
+
+SCALER_PATH = "/Users/legariapena.j/Documents/imageable-2026/imageable/data/models/cluster_ensemble_scaler.pkl"
+
+import joblib
+scaler = joblib.load(SCALER_PATH)
+
+indices_materials = [feature_names.index(x) for x in MATERIALS]
+def material_percentages(instances):
+    features = np.array([x["features"] for x in instances])
+    return scaler.inverse_transform(features)[:, indices_materials]
+
+
+boston_instances_materials = material_percentages(validation_instances_boston)
+monterrey_instances_materials = material_percentages(validation_instances_monterrey)
+```
+
+
+#### Get the predominant material for each building
+
+```{python}
+winner_materials_boston = [MATERIALS[int(np.argmax(x))] for x in boston_instances_materials]
+winner_materials_monterrey = [MATERIALS[int(np.argmax(x))] for x in monterrey_instances_materials]
+
+counts_boston_leaf = sum([1 if x == "material_pct_leaf" else 0 for x in winner_materials_boston])
+print(f"Percentage leaf Boston: {(counts_boston_leaf/len(winner_materials_boston))*100}")
+
+counts_monterrey_leaf = sum([1 if x == "material_pct_leaf" else 0 for x in winner_materials_monterrey])
+print(f"Percentage leaf Monterrey: {(counts_monterrey_leaf/len(winner_materials_monterrey))*100}")
+
+
+counts_boston_brick = sum([1 if x == "material_pct_brick" else 0 for x in winner_materials_boston])
+print(f"Percentage brick Boston: {(counts_boston_brick/len(winner_materials_boston))*100}")
+
+counts_monterrey_brick = sum([1 if x == "material_pct_brick" else 0 for x in winner_materials_monterrey])
+print(f"Percentage brick Monterrey: {(counts_monterrey_brick/len(winner_materials_monterrey))*100}")
+
+```
