@@ -1,0 +1,800 @@
+---
+title: Framework experiment 1
+author: Uriel Legaria
+jupyter: imageable
+format: html
+execute:
+  warning: false
+  message: false
+---
+
+Let's import what we will need. 
+
+```{python}
+import numpy as np
+from imageable.visualization.data_visualization import plot_styled_histogram
+from scipy.stats import wilcoxon
+import matplotlib.pyplot as plt
+```
+
+### Define auxiliary functions
+```{python}
+#Computes RMSE from inferred values and ground truths. 
+def compute_rmse(values, ground_truths):
+    rmse = 0
+    for i in range(0,len(values)):
+        value = values[i]
+        ground_truth = ground_truths[i]
+        rmse = rmse + (1/len(values))*(value - ground_truth)**2
+    
+    rmse = np.sqrt(rmse)
+    return rmse
+
+
+#Gets the distribution of an array of values. It returns the bin values and the frequencies.  
+def get_distribution(values, n_bins = None, normalize = False):
+    if(n_bins == None):
+        n_bins = int(np.sqrt(len(values)))
+    
+
+    frequencies = np.zeros(n_bins)
+    min_value = np.min(values)
+    max_value = np.max(values)
+
+    for i in range(0,len(values)):
+        value = values[i]
+        bin = int(((value - min_value)/(max_value - min_value))*n_bins)
+        if(bin == n_bins):
+            bin = n_bins - 1
+        
+        frequencies[bin] += 1
+    
+    bin_vals = np.linspace(min_value,max_value, n_bins)
+    return bin_vals, frequencies
+
+#Wilcoxon's statistic and p-value
+def get_wilcoxon(diffs):
+    statistic, p_value = wilcoxon(
+        diffs,
+        alternative = "greater",
+        method = "auto"
+    )
+    return statistic, p_value
+
+
+def get_interval_indices(values, min_value, max_value, n_bins = 10):
+    """
+    Returns a dictionary indicating the indices within values that fall 
+    within the interval defined by each of the distribution's bins. The key
+    is (min_bin, max_bin), where min_bin and max_bin are the limits of the interval, 
+    """
+    values_distribution = np.linspace(min_value, max_value, n_bins)
+
+    indices_dictionary = {}
+    for i in range(0,len(values_distribution) - 1):
+        value1 = values_distribution[i]
+        value2 = values_distribution[i + 1]
+        interval = (value1, value2)
+        indices_dictionary[interval] = []
+
+    for i in range(0,len(values)):
+        value = values[i]
+        for j in range(0,len(values_distribution) - 1):
+            value1 = values_distribution[j]
+            value2 = values_distribution[j + 1]
+            interval = (value1, value2)
+            if(value >= value1 and value <= value2):
+                indices_dictionary[interval].append(i)
+                break
+    
+    return indices_dictionary
+
+
+def get_indices_with_threshold(values, threshold, upper = True):
+    """
+    Returns the indices of values above or below a threshold (depending on the value of `upper`).
+    """
+    indices = []
+    for i in range(0,len(values)):
+        value = values[i]
+        if(value > threshold and upper):
+            indices.append(i)
+        elif(not upper and value < threshold):
+            indices.append(i)
+        
+    return indices
+
+
+def filter_by_indices(values, indices):
+    """
+    Return only the values at locations indicated in indices.
+    """
+
+    new_values = []
+    for i in range(0,len(values)):
+        if (i in indices):
+            new_values.append(values[i])
+    
+    return new_values
+
+
+def get_error_differences(
+        model_1_values,
+        model_2_values,
+        real_values
+    ):
+    error_differences = []
+    for i in range(0,len(real_values)):
+        real_value = real_values[i]
+        value1 = model_1_values[i]
+        value2 = model_2_values[i]
+
+        error1 = np.abs(value1 - real_value)
+        error2 = np.abs(value2 - real_value)
+
+        error_difference = error1 - error2
+
+        error_differences.append(error_difference)
+    
+    return error_differences
+```
+
+### Function to conduct the full experiment
+
+In the first experiment we:
+
+1. Obtain the difference between errors ($MAE$) for the single XGBoost and the cluster-then-predict system:
+
+\begin{equation}
+\bar{\delta} = MAE_{\text{single}} - MAE_{\text{CTP}}
+\end{equation}
+
+
+2. We got the difference between $\bar{\delta}$ values obtained for a subgroup of the data and all the validation instances. 
+
+\begin{equation}
+g = \bar{\delta}_{\text{subgroup}} - \bar{\delta}_{\text{all}}
+\end{equation}
+
+
+3. We obtain the Relative difference gain for the subgroup:
+
+\begin{equation}
+\text{Rel} = \frac{\bar{\delta}_{\text{subgroup}} - \bar{\delta}_{\text{all}}}{\bar{\delta}_{\text{all}}} \times 100
+\end{equation}
+
+The subgroups that we consider are buildings that fall above or below the 75th percentile for different features, including:
+
+- Building height (ground truth)
+- Building height (street view)
+- Footprint complexity
+- Roundness (isoperimetric quotient)
+- Facade vegetation
+- Distance to neighbors
+
+```{python}
+def run_complete_experiment(
+    validation_set_monterrey,
+    validation_set_boston,
+    real_heights_monterrey,
+    real_heights_boston,
+    feature_name,
+    model1,
+    model2,
+    scaler,
+    model1_name = "single_model",
+    model2_name = "ctp",
+    feature_values_monterrey = None, 
+    feature_values_boston = None, 
+    percentile_for_threshold = 75,
+    threshold_value = None,
+    upper = True,
+    n_bins_distribution_error = 10,
+    n_bins_values_distribution = 10,
+    plot_differences_distribution = False
+):
+    VECTOR_FEATURES = [
+        "unprojected_area",
+        "projected_area",
+        "longitude_difference",
+        "latitude_difference",
+        "n_vertices",
+        "shape_length",
+        "complexity",
+        "inverse_average_segment_length",
+        "vertices_per_area",
+        "average_complexity_per_segment",
+        "isoperimetric_quotient",
+        "mean_distance_to_neighbors",
+        "nearest_neighbor_distance",
+        "material_pct_concrete",
+        "material_pct_metal",
+        "material_pct_glass",
+        "material_pct_plastic",
+        "material_pct_asphalt",
+        "material_pct_brick",
+        "material_pct_human_body",
+        "material_pct_wood",
+        "material_pct_plaster",
+        "material_pct_leaf",
+        "building_height"
+    ]
+
+    results = {}
+    if(feature_values_monterrey is None and feature_values_boston is None):
+        index_of_feature = VECTOR_FEATURES.index(feature_name)
+        validation_values_monterrey = [v[index_of_feature] for v in validation_set_monterrey]
+        validation_values_boston = [v[index_of_feature] for v in validation_set_boston]
+    else:
+        validation_values_monterrey = feature_values_monterrey
+        validation_values_boston = feature_values_boston
+    
+    complete_set = validation_values_monterrey.copy()
+    complete_set.extend(validation_values_boston)
+
+    THRESHOLD = np.percentile(complete_set, percentile_for_threshold)
+
+    if threshold_value is not None:
+        THRESHOLD = threshold_value
+    
+    #Get the threshold indices for Monterrey and Boston
+    threshold_indices_monterrey = get_indices_with_threshold(validation_values_monterrey, THRESHOLD, upper = upper)
+    threshold_indices_boston = get_indices_with_threshold(validation_values_boston, THRESHOLD, upper = upper)
+
+    #We filter the threshold vectors, heights, and values per threshold.
+
+    threshold_vectors_monterrey = filter_by_indices(validation_set_monterrey, threshold_indices_monterrey)
+    threshold_vectors_boston = filter_by_indices(validation_set_boston, threshold_indices_boston)
+    threshold_heights_monterrey = filter_by_indices(real_heights_monterrey, threshold_indices_monterrey)
+    threshold_heights_boston = filter_by_indices(real_heights_boston, threshold_indices_boston)
+    threshold_values_monterrey = filter_by_indices(validation_values_monterrey, threshold_indices_monterrey)
+    threshold_values_boston = filter_by_indices(validation_values_boston, threshold_indices_boston)
+
+    #Get the predictions for Monterrey and Boston with both of the models.
+    predictions1_monterrey = model1.predict(threshold_vectors_monterrey)
+    predictions2_monterrey = model2.predict(threshold_vectors_monterrey)
+    predictions1_boston = model1.predict(threshold_vectors_boston)
+    predictions2_boston = model2.predict(threshold_vectors_boston)
+
+    #Get the Unscaled threshold
+    if(not feature_values_monterrey and not feature_values_boston):
+        UNSCALED_THRESHOLD = (THRESHOLD * scaler.scale_[index_of_feature]+ scaler.mean_[index_of_feature])
+        print(F"Threshold: {UNSCALED_THRESHOLD}")
+    else:
+        print(f"Threshold: {THRESHOLD}")
+    
+
+    #Get the differences for the subgroup. 
+    differences_monterrey_subgroup = get_error_differences(
+        predictions1_monterrey,
+        predictions2_monterrey,
+        threshold_heights_monterrey
+    )
+
+    differences_boston_subgroup = get_error_differences(
+        predictions1_boston,
+        predictions2_boston,
+        threshold_heights_boston
+    )
+
+    #Get the differences for all the validation samples
+    all_predictions_monterrey1 = model1.predict(validation_set_monterrey)
+    all_predictions_boston1 = model1.predict(validation_set_boston)
+    all_predictions_monterrey2 = model2.predict(validation_set_monterrey)
+    all_predictions_boston2 = model2.predict(validation_set_boston)
+
+    differences_monterrey_all = get_error_differences(
+        all_predictions_monterrey1,
+        all_predictions_monterrey2,
+        real_heights_monterrey
+    )
+    
+    differences_boston_all = get_error_differences(
+        all_predictions_boston1, 
+        all_predictions_boston2, 
+        real_heights_boston
+    )
+
+    if plot_differences_distribution:
+        if upper:
+            level = "high "
+        else:
+            level = "not high "
+        plot_styled_histogram(
+            differences_monterrey_subgroup,
+            title = "Monterrey - "+level+feature_name+" error diff distribution",
+            x_label = model1_name + " - "+ model2_name,
+            y_label = "Frequency",
+            bins = n_bins_distribution_error
+        )
+
+        plot_styled_histogram(
+            differences_boston_subgroup,
+            title = "Boston - "+level+feature_name+" error diff distribution",
+            x_label = model1_name + " - "+ model2_name,
+            y_label = "Frequency",
+            bins = n_bins_distribution_error
+        )
+
+    delta_monterrey_all = np.mean(differences_monterrey_all)
+    delta_monterrey_subgroup = np.mean(differences_monterrey_subgroup)
+    delta_boston_all = np.mean(differences_boston_all)
+    delta_boston_subgroup = np.mean(differences_boston_subgroup)
+
+    g_monterrey = delta_monterrey_subgroup - delta_monterrey_all
+    g_boston = delta_boston_subgroup - delta_boston_all
+
+    #Get the relative error
+    relative_error_monterrey = (g_monterrey/delta_monterrey_all)*100
+    relative_error_boston = (g_boston/delta_boston_all)*100
+
+    return delta_monterrey_subgroup, g_monterrey, relative_error_monterrey, delta_boston_subgroup, g_boston, relative_error_boston
+```
+
+### Preparing the data
+
+```{python}
+#We'll do this with the pooled model,since it is the one reportedin the paper. 
+
+data_path = "/Users/legariapena.j/Documents/imageable-2026/imageable/data/training_validation_data/data.json"
+import json 
+
+def open_json(path):
+    with open(path, 'r') as f:
+        data = json.load(f)
+    return data
+
+data = open_json(data_path)
+#Let's separate by city
+monterrey_data = [d for d in data if d["city"] == "Monterrey"]
+boston_data = [d for d in data if d["city"] == "Boston"]
+
+#Great now let's load the models and the scaler. 
+import joblib
+
+scaler_path = "/Users/legariapena.j/Documents/imageable-2026/imageable/data/models/cluster_ensemble_scaler.pkl"
+single_path_model = "/Users/legariapena.j/Documents/imageable-2026/imageable/data/models/single_xgb_model.pkl"
+pooled_model_path = "/Users/legariapena.j/Documents/imageable-2026/imageable/data/models/cluster_ensemble_model.pkl"
+
+scaler = joblib.load(scaler_path)
+model_single = joblib.load(single_path_model)
+pooled_model = joblib.load(pooled_model_path)
+
+normalized_vectors_monterrey = [v["features"] for v in monterrey_data]
+normalized_vectors_boston = [v["features"] for v in boston_data]
+
+feature_names = monterrey_data[0]["feature_names"]
+
+VECTOR_FEATURES = [
+    "unprojected_area",
+    "projected_area",
+    "longitude_difference",
+    "latitude_difference",
+    "n_vertices",
+    "shape_length",
+    "complexity",
+    "inverse_average_segment_length",
+    "vertices_per_area",
+    "average_complexity_per_segment",
+    "isoperimetric_quotient",
+    "mean_distance_to_neighbors",
+    "nearest_neighbor_distance",
+    "material_pct_concrete",
+    "material_pct_metal",
+    "material_pct_glass",
+    "material_pct_plastic",
+    "material_pct_asphalt",
+    "material_pct_brick",
+    "material_pct_human_body",
+    "material_pct_wood",
+    "material_pct_plaster",
+    "material_pct_leaf",
+    "building_height"
+]
+
+#Let's keep only the features used by the models
+monterrey_shortened_normalized = []
+for i in range(0,len(normalized_vectors_monterrey)):
+    long_vector = normalized_vectors_monterrey[i]
+    new_vector = []
+    for j in range(0,len(VECTOR_FEATURES)):
+        feature = VECTOR_FEATURES[j]
+        feature_index = feature_names.index(feature)
+        #This index is the one we need 
+        feature_value = long_vector[feature_index]
+        new_vector.append(feature_value)
+    
+    monterrey_shortened_normalized.append(new_vector)
+
+
+#Same for Boston
+boston_shortened_normalized = []
+for i in range(0,len(normalized_vectors_boston)):
+    long_vector = normalized_vectors_boston[i]
+    new_vector = []
+    for j in range(0,len(VECTOR_FEATURES)):
+        feature = VECTOR_FEATURES[j]
+        feature_index = feature_names.index(feature)
+        feature_value = long_vector[feature_index]
+        new_vector.append(feature_value)
+    
+    boston_shortened_normalized.append(new_vector)
+
+#Great now we need to transform them back to their original units, so we are going to use the scaler. 
+
+monterrey_shortened = []
+
+for i in range(0,len(monterrey_shortened_normalized)):
+    scaled_vector = np.array(monterrey_shortened_normalized[i]).reshape(1,-1)
+    unscaled_vector = scaler.inverse_transform(scaled_vector)
+    monterrey_shortened.append(unscaled_vector)
+
+
+boston_shortened = []
+for i in range(0,len(boston_shortened_normalized)):
+    scaled_vector = np.array(boston_shortened_normalized[i]).reshape(1,-1)
+    unscaled_vector = scaler.inverse_transform(scaled_vector)
+    boston_shortened.append(unscaled_vector)
+
+#I think we have all the data we need and now I need to infer the heights but in this case we need to filter to keep only the validation instances.
+
+validation_types_monterrey = [v["data_type"] for v in monterrey_data]
+validation_types_boston = [v["data_type"] for v in boston_data]
+
+monterrey_validation_indexes = []
+for i in range(0,len(monterrey_data)):
+    validation_type = validation_types_monterrey[i]
+    if(validation_type == "validation"):
+        monterrey_validation_indexes.append(i)
+
+
+boston_validation_indexes = []
+for i in range(0,len(boston_data)):
+    validation_type = validation_types_boston[i]
+    if(validation_type == "validation"):
+        boston_validation_indexes.append(i)
+
+
+monterrey_validation_normalized = [monterrey_shortened_normalized[x] for x in monterrey_validation_indexes]
+boston_validation_normalized = [boston_shortened_normalized[x] for x in boston_validation_indexes]
+
+monterrey_validation_unscaled = [monterrey_shortened[x] for x in monterrey_validation_indexes]
+boston_validation_unscaled = [boston_shortened[x] for x in boston_validation_indexes]
+
+real_heights_monterrey_validation = [v["real_height"] for v in monterrey_data]
+real_heights_monterrey_validation = [real_heights_monterrey_validation[x] for x in monterrey_validation_indexes]
+
+real_heights_boston_validation = [v["real_height"] for v in boston_data]
+real_heights_boston_validation = [real_heights_boston_validation[x] for x in boston_validation_indexes]
+```
+
+
+### Applying it to different features
+
+#### Building height (Above P75)
+
+```{python}
+results_dictionary = {}
+results_dictionary["subgroup"] = []
+results_dictionary["delta_monterrey"] = []
+results_dictionary["g_monterrey"] = []
+results_dictionary["relative_diff_monterrey"] = []
+results_dictionary["delta_boston"] = []
+results_dictionary["g_boston"] = []
+results_dictionary["relative_diff_boston"] = []
+
+delta_monterrey_subgroup, g_monterrey, relative_error_monterrey, delta_boston_subgroup, g_boston, relative_error_boston = run_complete_experiment(
+    monterrey_validation_normalized,
+    boston_validation_normalized,
+    real_heights_monterrey_validation,
+    real_heights_boston_validation,
+    "building_height_real",
+    model_single,
+    pooled_model,
+    scaler,
+    feature_values_boston = real_heights_boston_validation,
+    feature_values_monterrey = real_heights_monterrey_validation,
+    n_bins_distribution_error=40,
+    plot_differences_distribution=False
+)
+
+results_dictionary["subgroup"].append("Building height (Above P75)")
+results_dictionary["delta_monterrey"].append(delta_monterrey_subgroup)
+results_dictionary["g_monterrey"].append(g_monterrey)
+results_dictionary["relative_diff_monterrey"].append(relative_error_monterrey)
+results_dictionary["delta_boston"].append(delta_boston_subgroup)
+results_dictionary["g_boston"].append(g_boston)
+results_dictionary["relative_diff_boston"].append(relative_error_boston)
+
+```
+
+
+#### Building height (Below P75)
+
+```{python}
+delta_monterrey_subgroup, g_monterrey, relative_error_monterrey, delta_boston_subgroup, g_boston, relative_error_boston = run_complete_experiment(
+    monterrey_validation_normalized,
+    boston_validation_normalized,
+    real_heights_monterrey_validation,
+    real_heights_boston_validation,
+    "building_height_real",
+    model_single,
+    pooled_model,
+    scaler,
+    feature_values_boston = real_heights_boston_validation,
+    feature_values_monterrey = real_heights_monterrey_validation,
+    n_bins_distribution_error=40,
+    upper=False,
+    plot_differences_distribution=False
+)
+
+results_dictionary["subgroup"].append("Building height (Below P75)")
+results_dictionary["delta_monterrey"].append(delta_monterrey_subgroup)
+results_dictionary["g_monterrey"].append(g_monterrey)
+results_dictionary["relative_diff_monterrey"].append(relative_error_monterrey)
+results_dictionary["delta_boston"].append(delta_boston_subgroup)
+results_dictionary["g_boston"].append(g_boston)
+results_dictionary["relative_diff_boston"].append(relative_error_boston)
+```
+
+#### Building height (street view) (Above P75)
+
+```{python}
+delta_monterrey_subgroup, g_monterrey, relative_error_monterrey, delta_boston_subgroup, g_boston, relative_error_boston = run_complete_experiment(
+    monterrey_validation_normalized,
+    boston_validation_normalized,
+    real_heights_monterrey_validation,
+    real_heights_boston_validation,
+    "building_height",
+    model_single,
+    pooled_model,
+    scaler,
+    n_bins_distribution_error=40,
+    plot_differences_distribution=False
+)
+
+results_dictionary["subgroup"].append("Building height (street view) (Above P75)")
+results_dictionary["delta_monterrey"].append(delta_monterrey_subgroup)
+results_dictionary["g_monterrey"].append(g_monterrey)
+results_dictionary["relative_diff_monterrey"].append(relative_error_monterrey)
+results_dictionary["delta_boston"].append(delta_boston_subgroup)
+results_dictionary["g_boston"].append(g_boston)
+results_dictionary["relative_diff_boston"].append(relative_error_boston)
+```
+
+#### Building height (street view) (Below P75)
+
+```{python}
+delta_monterrey_subgroup, g_monterrey, relative_error_monterrey, delta_boston_subgroup, g_boston, relative_error_boston = run_complete_experiment(
+    monterrey_validation_normalized,
+    boston_validation_normalized,
+    real_heights_monterrey_validation,
+    real_heights_boston_validation,
+    "building_height",
+    model_single,
+    pooled_model,
+    scaler,
+    n_bins_distribution_error=40,
+    upper=False,
+    plot_differences_distribution=False
+)
+
+results_dictionary["subgroup"].append("Building height (street view) (Below P75)")
+results_dictionary["delta_monterrey"].append(delta_monterrey_subgroup)
+results_dictionary["g_monterrey"].append(g_monterrey)
+results_dictionary["relative_diff_monterrey"].append(relative_error_monterrey)
+results_dictionary["delta_boston"].append(delta_boston_subgroup)
+results_dictionary["g_boston"].append(g_boston)
+results_dictionary["relative_diff_boston"].append(relative_error_boston)
+```
+
+#### Footprint complexity (Above P75)
+
+```{python}
+delta_monterrey_subgroup, g_monterrey, relative_error_monterrey, delta_boston_subgroup, g_boston, relative_error_boston = run_complete_experiment(
+    monterrey_validation_normalized,
+    boston_validation_normalized,
+    real_heights_monterrey_validation,
+    real_heights_boston_validation,
+    "complexity",
+    model_single,
+    pooled_model,
+    scaler,
+    n_bins_distribution_error=40,
+    plot_differences_distribution=False
+)
+
+results_dictionary["subgroup"].append("Footprint complexity (Above P75)")
+results_dictionary["delta_monterrey"].append(delta_monterrey_subgroup)
+results_dictionary["g_monterrey"].append(g_monterrey)
+results_dictionary["relative_diff_monterrey"].append(relative_error_monterrey)
+results_dictionary["delta_boston"].append(delta_boston_subgroup)
+results_dictionary["g_boston"].append(g_boston)
+results_dictionary["relative_diff_boston"].append(relative_error_boston)
+```
+
+#### Footprint complexity (Below P75)
+
+```{python}
+delta_monterrey_subgroup, g_monterrey, relative_error_monterrey, delta_boston_subgroup, g_boston, relative_error_boston = run_complete_experiment(
+    monterrey_validation_normalized,
+    boston_validation_normalized,
+    real_heights_monterrey_validation,
+    real_heights_boston_validation,
+    "complexity",
+    model_single,
+    pooled_model,
+    scaler,
+    n_bins_distribution_error=40,
+    upper=False,
+    plot_differences_distribution=False
+)
+
+results_dictionary["subgroup"].append("Footprint complexity (Below P75)")
+results_dictionary["delta_monterrey"].append(delta_monterrey_subgroup)
+results_dictionary["g_monterrey"].append(g_monterrey)
+results_dictionary["relative_diff_monterrey"].append(relative_error_monterrey)
+results_dictionary["delta_boston"].append(delta_boston_subgroup)
+results_dictionary["g_boston"].append(g_boston)
+results_dictionary["relative_diff_boston"].append(relative_error_boston)
+```
+
+#### Roundness (isoperimetric quotient) (Above P75)
+
+```{python}
+delta_monterrey_subgroup, g_monterrey, relative_error_monterrey, delta_boston_subgroup, g_boston, relative_error_boston = run_complete_experiment(
+    monterrey_validation_normalized,
+    boston_validation_normalized,
+    real_heights_monterrey_validation,
+    real_heights_boston_validation,
+    "isoperimetric_quotient",
+    model_single,
+    pooled_model,
+    scaler,
+    n_bins_distribution_error=40,
+    plot_differences_distribution=False
+)
+
+results_dictionary["subgroup"].append("Roundness (isoperimetric quotient) (Above P75)")
+results_dictionary["delta_monterrey"].append(delta_monterrey_subgroup)
+results_dictionary["g_monterrey"].append(g_monterrey)
+results_dictionary["relative_diff_monterrey"].append(relative_error_monterrey)
+results_dictionary["delta_boston"].append(delta_boston_subgroup)
+results_dictionary["g_boston"].append(g_boston)
+results_dictionary["relative_diff_boston"].append(relative_error_boston)
+```
+
+#### Roundness (isoperimetric quotient) (Below P75)
+
+```{python}
+delta_monterrey_subgroup, g_monterrey, relative_error_monterrey, delta_boston_subgroup, g_boston, relative_error_boston = run_complete_experiment(
+    monterrey_validation_normalized,
+    boston_validation_normalized,
+    real_heights_monterrey_validation,
+    real_heights_boston_validation,
+    "isoperimetric_quotient",
+    model_single,
+    pooled_model,
+    scaler,
+    n_bins_distribution_error=40,
+    upper=False,
+    plot_differences_distribution=False
+)
+
+results_dictionary["subgroup"].append("Roundness (isoperimetric quotient) (Below P75)")
+results_dictionary["delta_monterrey"].append(delta_monterrey_subgroup)
+results_dictionary["g_monterrey"].append(g_monterrey)
+results_dictionary["relative_diff_monterrey"].append(relative_error_monterrey)
+results_dictionary["delta_boston"].append(delta_boston_subgroup)
+results_dictionary["g_boston"].append(g_boston)
+results_dictionary["relative_diff_boston"].append(relative_error_boston)
+```
+
+#### Facade vegetation (Above P75)
+
+```{python}
+delta_monterrey_subgroup, g_monterrey, relative_error_monterrey, delta_boston_subgroup, g_boston, relative_error_boston = run_complete_experiment(
+    monterrey_validation_normalized,
+    boston_validation_normalized,
+    real_heights_monterrey_validation,
+    real_heights_boston_validation,
+    "material_pct_leaf",
+    model_single,
+    pooled_model,
+    scaler,
+    n_bins_distribution_error=40,
+    plot_differences_distribution=False
+)
+
+results_dictionary["subgroup"].append("Facade vegetation (Above P75)")
+results_dictionary["delta_monterrey"].append(delta_monterrey_subgroup)
+results_dictionary["g_monterrey"].append(g_monterrey)
+results_dictionary["relative_diff_monterrey"].append(relative_error_monterrey)
+results_dictionary["delta_boston"].append(delta_boston_subgroup)
+results_dictionary["g_boston"].append(g_boston)
+results_dictionary["relative_diff_boston"].append(relative_error_boston)
+```
+
+#### Facade vegetation (Below P75)
+
+```{python}
+delta_monterrey_subgroup, g_monterrey, relative_error_monterrey, delta_boston_subgroup, g_boston, relative_error_boston = run_complete_experiment(
+    monterrey_validation_normalized,
+    boston_validation_normalized,
+    real_heights_monterrey_validation,
+    real_heights_boston_validation,
+    "material_pct_leaf",
+    model_single,
+    pooled_model,
+    scaler,
+    n_bins_distribution_error=40,
+    upper=False,
+    plot_differences_distribution=False
+)
+
+results_dictionary["subgroup"].append("Facade vegetation (Below P75)")
+results_dictionary["delta_monterrey"].append(delta_monterrey_subgroup)
+results_dictionary["g_monterrey"].append(g_monterrey)
+results_dictionary["relative_diff_monterrey"].append(relative_error_monterrey)
+results_dictionary["delta_boston"].append(delta_boston_subgroup)
+results_dictionary["g_boston"].append(g_boston)
+results_dictionary["relative_diff_boston"].append(relative_error_boston)
+```
+
+#### Distance to neighbors (Above P75)
+
+```{python}
+delta_monterrey_subgroup, g_monterrey, relative_error_monterrey, delta_boston_subgroup, g_boston, relative_error_boston = run_complete_experiment(
+    monterrey_validation_normalized,
+    boston_validation_normalized,
+    real_heights_monterrey_validation,
+    real_heights_boston_validation,
+    "mean_distance_to_neighbors",
+    model_single,
+    pooled_model,
+    scaler,
+    n_bins_distribution_error=40,
+    plot_differences_distribution=False
+)
+
+results_dictionary["subgroup"].append("Distance to neighbors (Above P75)")
+results_dictionary["delta_monterrey"].append(delta_monterrey_subgroup)
+results_dictionary["g_monterrey"].append(g_monterrey)
+results_dictionary["relative_diff_monterrey"].append(relative_error_monterrey)
+results_dictionary["delta_boston"].append(delta_boston_subgroup)
+results_dictionary["g_boston"].append(g_boston)
+results_dictionary["relative_diff_boston"].append(relative_error_boston)
+```
+
+#### Distance to neighbors (Below P75)
+
+```{python}
+delta_monterrey_subgroup, g_monterrey, relative_error_monterrey, delta_boston_subgroup, g_boston, relative_error_boston = run_complete_experiment(
+    monterrey_validation_normalized,
+    boston_validation_normalized,
+    real_heights_monterrey_validation,
+    real_heights_boston_validation,
+    "mean_distance_to_neighbors",
+    model_single,
+    pooled_model,
+    scaler,
+    n_bins_distribution_error=40,
+    upper=False,
+    plot_differences_distribution=False
+)
+
+results_dictionary["subgroup"].append("Distance to neighbors (Below P75)")
+results_dictionary["delta_monterrey"].append(delta_monterrey_subgroup)
+results_dictionary["g_monterrey"].append(g_monterrey)
+results_dictionary["relative_diff_monterrey"].append(relative_error_monterrey)
+results_dictionary["delta_boston"].append(delta_boston_subgroup)
+results_dictionary["g_boston"].append(g_boston)
+results_dictionary["relative_diff_boston"].append(relative_error_boston)
+```
+
+### Putting it all together
+```{python}
+import pandas as pd
+dataframe = pd.DataFrame(data = results_dictionary)
+dataframe
+```
