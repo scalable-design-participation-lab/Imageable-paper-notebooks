@@ -1,0 +1,63 @@
+---
+title: Complexity Variability
+author: Uriel Legaria
+jupyter: imageable
+execute:
+  warning: false
+  message: false
+---
+
+In this notebook I obtain the complexity variabilities of Boston and Monterrey. The complexity of a building's footprint is defined as the footprint perimeter divided by the footprint's area:
+
+$$\text{Complexity} = \frac{\text{Perimeter}}{\text{Area}}$$
+
+The units depend on the CRS that you use. We use `EPSG:4326`, which is the one utilized in other studies. 
+
+The metric has more sensitivity than specificity. If a building has a complex shape that usually means it will have a higher perimeter and thus higher complexity. However, you can also get a high complexity if the building has a regular shape but it's very small. 
+
+We measure the complexity variability as the interquartile range of complexity:
+
+$$IQR_{\text{complexity}} = P_{75,\text{complexity}} - P_{25, \text{complexity}}$$
+
+It's important to know that the variability here is computed over the normalized complexity.
+
+```{python}
+import json
+
+
+PATH_DATA = "/Users/legariapena.j/Documents/imageable-2026/imageable/data/training_validation_data/data.json"
+
+with open(PATH_DATA, "r") as f:
+    data = json.load(f)
+
+validation_data = [x for x in data if x["data_type"] == "validation"]
+
+#Boston validation data
+boston_validation = [x for x in validation_data if x["city"] == "Boston"]
+#Monterrey validation data
+monterrey_validation = [x for x in validation_data if x["city"] == "Monterrey"]
+
+feature_names = data[0]["feature_names"]
+COMPLEXITY_FEATURE_NAME = "complexity"
+complexity_index = feature_names.index(COMPLEXITY_FEATURE_NAME)
+
+import numpy as np
+def assess_iqr(values):
+    median = np.percentile(values, 50)
+    p25 = np.percentile(values, 25)
+    p75 = np.percentile(values, 75)
+    return p75 - p25, median
+
+feature_vectors_boston = [x["features"] for x in boston_validation]
+feature_vectors_monterrey = [x["features"] for x in monterrey_validation]
+#Get lists with the complexity values
+complexity_values_boston = [x[complexity_index] for x in feature_vectors_boston]
+complexity_values_monterrey = [x[complexity_index] for x in feature_vectors_monterrey]
+
+range_boston, median_boston = assess_iqr(complexity_values_boston)
+range_monterrey, median_monterrey = assess_iqr(complexity_values_monterrey)
+
+print(f"The complexity variability in Boston is {range_boston}")
+print(f"The complexity variability in Monterrey is {range_monterrey}")
+```
+
