@@ -1,0 +1,267 @@
+---
+title: Framework thresholds
+author: Uriel Legaria
+jupyter: imageable
+format: html
+execute:
+  warning: false
+  message: false
+---
+
+In this notebook I obtain the thresholds used in the framework for Boston and Monterrey. Each threshold is a percentile of one feature, computed over the validation buildings of each city:
+
+1. P10 sharpness
+2. P10 sky visibility
+3. P10 facade visibility
+4. P10 ground visibility
+5. P10 number of detected facade lines
+6. P10 mean line detection confidence
+7. P90 vegetation
+8. P75 building height
+9. P90 image entropy
+10. P75 distance to neighbours
+
+The vegetation, the distance to neighbours and the street view height come from `data.json`. These are normalized, so we transform them back to their original units with the scaler. The image quality descriptors and the real heights come from `preparation_experiment_3.json`, which we computed in the third experiment.
+
+### Opening the data
+
+```{python}
+DATA_PATH = "/Users/legariapena.j/Documents/imageable-2026/imageable/data/training_validation_data/data.json"
+
+import json
+with open(DATA_PATH, "r") as file:
+    data = json.load(file)
+
+feature_names = data[0]["feature_names"]
+
+#Divide Boston data and Monterrey data
+monterrey_data = [x["features"] for x in data if x["city"] == "Monterrey" and x["data_type"] == "validation"]
+boston_data = [x["features"] for x in data if x["city"] == "Boston" and x["data_type"] == "validation"]
+
+SCALER_PATH = "/Users/legariapena.j/Documents/imageable-2026/imageable/data/models/cluster_ensemble_scaler.pkl"
+
+import joblib
+
+scaler = joblib.load(SCALER_PATH)
+import numpy as np
+
+monterrey_data_inverted = [scaler.inverse_transform(np.array(x).reshape(1, -1)) for x in monterrey_data]
+boston_data_inverted = [scaler.inverse_transform(np.array(x).reshape(1, -1)) for x in boston_data]
+
+
+
+monterrey_data_inverted = [x[0] for x in monterrey_data_inverted]
+boston_data_inverted = [x[0] for x in boston_data_inverted]
+
+
+EXPERIMENT_3_DATA_PATH = "/Users/legariapena.j/Documents/imageable-2026/imageable/framework-imageable/results/preparation_experiment_3.json"
+
+with open(EXPERIMENT_3_DATA_PATH, "r") as file:
+    data_experiment_3 = json.load(file)
+
+data_experiment_3_monterrey = [x for x in data_experiment_3 if x["city"] == "Monterrey"]
+data_experiment_3_boston = [x for x in data_experiment_3 if x["city"] == "Boston"]
+```
+
+### Functions to get the percentiles
+
+The number of detected lines and the mean line confidence are not stored as fields, they are computed from the `lines` and `scores` lists of every building.
+
+```{python}
+def get_percentile(percentile, feature_name):
+    index = feature_names.index(feature_name)
+    feature_array_monterrey = [monterrey_data_inverted[i][index] for i in range(0, len(monterrey_data_inverted))]
+    feature_array_boston = [boston_data_inverted[i][index] for i in range(0, len(boston_data_inverted))]
+
+    percentile_value_monterrey = np.percentile(feature_array_monterrey, percentile)
+    percentile_value_boston = np.percentile(feature_array_boston, percentile)
+
+    return percentile_value_monterrey, percentile_value_boston
+
+def get_percentile_from_image_qual_data(
+        data_boston,
+        data_monterrey,
+        percentile,
+        feature_name,
+    ):
+    subdata_boston = [x[feature_name] for x in data_boston]
+    subdata_monterrey = [x[feature_name] for x in data_monterrey]
+
+    percentile_monterrey = np.percentile(subdata_monterrey, percentile)
+    percentile_boston = np.percentile(subdata_boston, percentile)
+
+    return percentile_monterrey, percentile_boston
+
+def get_percentile_from_derived(
+        data_boston,
+        data_monterrey,
+        percentile,
+        derive,
+    ):
+    subdata_boston = [derive(x) for x in data_boston]
+    subdata_monterrey = [derive(x) for x in data_monterrey]
+
+    percentile_monterrey = np.percentile(subdata_monterrey, percentile)
+    percentile_boston = np.percentile(subdata_boston, percentile)
+
+    return percentile_monterrey, percentile_boston
+```
+
+### Vegetation
+
+```{python}
+PERCENTILE_VEGETATION = 90
+VEGETATION_NAME = "material_pct_leaf"
+
+percentile_monterrey, percentile_boston = get_percentile(PERCENTILE_VEGETATION, VEGETATION_NAME)
+print(f"Percentile of {VEGETATION_NAME} for Monterrey is {percentile_monterrey}")
+print(f"Percentile of {VEGETATION_NAME} for Boston is {percentile_boston}")
+```
+
+### Sharpness
+
+```{python}
+PERCENTILE_SHARPNESS = 10
+SHARPNESS_NAME = "sharpness"
+
+percentile_monterrey, percentile_boston = get_percentile_from_image_qual_data(
+    data_experiment_3_boston,
+    data_experiment_3_monterrey,
+    PERCENTILE_SHARPNESS,
+    SHARPNESS_NAME
+
+)
+print(f"Percentile of {SHARPNESS_NAME} for Monterrey is {percentile_monterrey}")
+print(f"Percentile of {SHARPNESS_NAME} for Boston is {percentile_boston}")
+```
+
+### Sky visibility
+
+```{python}
+PERCENTILE_SKY = 10
+SKY_NAME = "sky_ratio"
+
+percentile_monterrey, percentile_boston = get_percentile_from_image_qual_data(
+    data_experiment_3_boston,
+    data_experiment_3_monterrey,
+    PERCENTILE_SKY,
+    SKY_NAME
+
+)
+print(f"Percentile of {SKY_NAME} for Monterrey is {percentile_monterrey}")
+print(f"Percentile of {SKY_NAME} for Boston is {percentile_boston}")
+```
+
+### Facade visibility
+
+```{python}
+PERCENTILE_FACADE = 10
+FACADE_NAME = "facade_ratio"
+
+percentile_monterrey, percentile_boston = get_percentile_from_image_qual_data(
+    data_experiment_3_boston,
+    data_experiment_3_monterrey,
+    PERCENTILE_FACADE,
+    FACADE_NAME
+
+)
+print(f"Percentile of {FACADE_NAME} for Monterrey is {percentile_monterrey}")
+print(f"Percentile of {FACADE_NAME} for Boston is {percentile_boston}")
+```
+
+### Ground visibility
+
+```{python}
+PERCENTILE_GROUND = 10
+GROUND_NAME = "ground_ratio"
+
+percentile_monterrey, percentile_boston = get_percentile_from_image_qual_data(
+    data_experiment_3_boston,
+    data_experiment_3_monterrey,
+    PERCENTILE_GROUND,
+    GROUND_NAME
+
+)
+print(f"Percentile of {GROUND_NAME} for Monterrey is {percentile_monterrey}")
+print(f"Percentile of {GROUND_NAME} for Boston is {percentile_boston}")
+```
+
+### Image entropy
+
+```{python}
+PERCENTILE_ENTROPY = 90
+ENTROPY_NAME = "image_entropy"
+
+percentile_monterrey, percentile_boston = get_percentile_from_image_qual_data(
+    data_experiment_3_boston,
+    data_experiment_3_monterrey,
+    PERCENTILE_ENTROPY,
+    ENTROPY_NAME
+
+)
+print(f"Percentile of {ENTROPY_NAME} for Monterrey is {percentile_monterrey}")
+print(f"Percentile of {ENTROPY_NAME} for Boston is {percentile_boston}")
+```
+
+### Number of detected facade lines
+
+```{python}
+PERCENTILE_LINES = 10
+LINES_NAME = "number of detected facade lines"
+
+percentile_monterrey, percentile_boston = get_percentile_from_derived(
+    data_experiment_3_boston,
+    data_experiment_3_monterrey,
+    PERCENTILE_LINES,
+    lambda x: len(x["lines"])
+
+)
+print(f"Percentile of {LINES_NAME} for Monterrey is {percentile_monterrey}")
+print(f"Percentile of {LINES_NAME} for Boston is {percentile_boston}")
+```
+
+### Mean line detection confidence
+
+```{python}
+PERCENTILE_CONFIDENCE = 10
+CONFIDENCE_NAME = "mean line detection confidence"
+
+percentile_monterrey, percentile_boston = get_percentile_from_derived(
+    data_experiment_3_boston,
+    data_experiment_3_monterrey,
+    PERCENTILE_CONFIDENCE,
+    lambda x: np.mean(x["scores"])
+
+)
+print(f"Percentile of {CONFIDENCE_NAME} for Monterrey is {percentile_monterrey}")
+print(f"Percentile of {CONFIDENCE_NAME} for Boston is {percentile_boston}")
+```
+
+### Distance to neighbours
+
+```{python}
+PERCENTILE_DISTANCE = 75
+DISTANCE_NAME = "mean_distance_to_neighbors"
+
+percentile_monterrey, percentile_boston = get_percentile(PERCENTILE_DISTANCE, DISTANCE_NAME)
+print(f"Percentile of {DISTANCE_NAME} for Monterrey is {percentile_monterrey}")
+print(f"Percentile of {DISTANCE_NAME} for Boston is {percentile_boston}")
+```
+
+### Building height
+
+```{python}
+PERCENTILE_HEIGHT = 75
+
+real_heights_monterrey = [x["real_height"] for x in data_experiment_3_monterrey]
+real_heights_boston = [x["real_height"] for x in data_experiment_3_boston]
+
+percentile_monterrey = np.percentile(real_heights_monterrey, PERCENTILE_HEIGHT)
+percentile_boston = np.percentile(real_heights_boston, PERCENTILE_HEIGHT)
+print(f"Percentile of real_height for Monterrey is {percentile_monterrey}")
+print(f"Percentile of real_height for Boston is {percentile_boston}")
+
+percentile_monterrey, percentile_boston = get_percentile(PERCENTILE_HEIGHT, "building_height")
+print(f"Percentile of building_height (street view) for Monterrey is {percentile_monterrey}")
+print(f"Percentile of building_height (street view) for Boston is {percentile_boston}")
+```
