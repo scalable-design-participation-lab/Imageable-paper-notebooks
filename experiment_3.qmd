@@ -2,7 +2,10 @@
 title: Framework experiment 3
 author: Uriel Legaria
 jupyter: imageable
-format: html
+format:
+  html:
+    include-in-header:
+      text: "<style>.figure-img { max-width: 100%; height: auto; }</style>"
 execute:
   warning: false
   message: false

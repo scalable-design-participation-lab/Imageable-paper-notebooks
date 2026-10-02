@@ -79,6 +79,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="https://cdn.jsdelivr.net/npm/requirejs@2.3.6/require.min.js" integrity="sha384-c9c+LnTbwQ3aujuU7ULEPVvgLs+Fn6fJUvIGTsuu1ZcCf11fiEubah0ttpca4ntM sha384-6V1/AdqZRWk1KAlWbKBlGhN7VG4iE/yAZcO6NZPMF8od0vukrvr0tg4qY6NSrItx" crossorigin="anonymous"></script>
 
 <script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+<style>.figure-img { max-width: 100%; height: auto; }</style>
 
   <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
   <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
@@ -147,7 +148,7 @@ window.Quarto = {
 <section id="auxiliary-functions" class="level3">
 <h3 class="anchored" data-anchor-id="auxiliary-functions">Auxiliary functions</h3>
 <p>Following the structure of the first two experiments let’s first define some auxiliary functions.</p>
-<div id="a7e5b5cf" class="cell" data-execution_count="1">
+<div id="3d9d5af8" class="cell" data-execution_count="1">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> joblib</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> json</span>
@@ -228,7 +229,7 @@ window.Quarto = {
 <p><span class="math display">\[\begin{equation}
 \text{Penalty} = RMSE_{\text{footprints}} - \min(RMSE_{\text{single}}, RMSE_{\text{CTP}})
 \end{equation}\]</span></p>
-<div id="9709ddf5" class="cell" data-execution_count="2">
+<div id="29137d00" class="cell" data-execution_count="2">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> run_experiment_3(</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>        features,</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>        model_ctp,</span>
@@ -277,7 +278,7 @@ window.Quarto = {
 </section>
 <section id="opening-the-data" class="level3">
 <h3 class="anchored" data-anchor-id="opening-the-data">Opening the data</h3>
-<div id="859ff5cd" class="cell" data-execution_count="3">
+<div id="6b6a9015" class="cell" data-execution_count="3">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>DATA_PATH <span class="op">=</span> <span class="st">"/Users/legariapena.j/Documents/imageable-2026/imageable/data/training_validation_data/data.json"</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> <span class="bu">open</span>(DATA_PATH, <span class="st">'r'</span>) <span class="im">as</span> <span class="bu">file</span>:</span>
@@ -288,7 +289,7 @@ window.Quarto = {
 <h3 class="anchored" data-anchor-id="image-quality-descriptors">Image quality descriptors</h3>
 <p>This is the slowest part of the experiment. It runs the line detection and segmentation models over every validation image and it takes hours, so I ran it once and saved the descriptors in <code>preparation_experiment_3.json</code>. The cells of this section are not executed when the notebook is rendered.</p>
 <p>First we associate every building with its image and metadata.</p>
-<div id="316e3ab4" class="cell" data-execution_count="4">
+<div id="01e8b00a" class="cell" data-execution_count="4">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>SRC_IMAGES_PATH <span class="op">=</span> Path(<span class="st">"/Users/legariapena.j/Library/CloudStorage/GoogleDrive-legariapena.j@husky.neu.edu/"</span></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Shared drives/Cool and Carbon Free Africa/Building Image Datasets/data"</span>)</span>
@@ -332,7 +333,7 @@ window.Quarto = {
 <span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>    metadata_paths.append(path_metadata)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Now the functions that compute each descriptor.</p>
-<div id="f108754d" class="cell" data-execution_count="5">
+<div id="bfa386ea" class="cell" data-execution_count="5">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> cv2</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> imageable._models.lcnn <span class="im">import</span> LCNNWrapper</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span>
@@ -437,7 +438,7 @@ window.Quarto = {
 <span id="cb5-102"><a href="#cb5-102" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> (seg <span class="op">==</span> <span class="dv">1</span>).mean()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Finally we compute the descriptors for the validation images and save them.</p>
-<div id="bc44c70b" class="cell" data-execution_count="6">
+<div id="3f42a1a8" class="cell" data-execution_count="6">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> PIL <span class="im">import</span> Image</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> tqdm <span class="im">import</span> tqdm</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -531,7 +532,7 @@ window.Quarto = {
 <section id="preparing-the-data" class="level3">
 <h3 class="anchored" data-anchor-id="preparing-the-data">Preparing the data</h3>
 <p>Now we open the models and the descriptors, and keep only the validation instances.</p>
-<div id="b355e31f" class="cell" data-execution_count="7">
+<div id="a56dc986" class="cell" data-execution_count="7">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>CTP_MODEL_PATH <span class="op">=</span> <span class="st">"/Users/legariapena.j/Documents/imageable-2026/imageable/data/models/cluster_ensemble_model.pkl"</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>SINGLE_MODEL_PATH <span class="op">=</span> <span class="st">"/Users/legariapena.j/Documents/imageable-2026/imageable/data/models/single_xgb_model.pkl"</span></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>FOOTPRINTS_MODEL_PATH <span class="op">=</span> <span class="st">"/Users/legariapena.j/Documents/imageable-2026/imageable/data/models/footprint_xgb_model.pkl"</span></span>
@@ -600,7 +601,7 @@ window.Quarto = {
 <h3 class="anchored" data-anchor-id="applying-it-to-the-different-conditions">Applying it to the different conditions</h3>
 <section id="low-number-of-detected-lines" class="level4">
 <h4 class="anchored" data-anchor-id="low-number-of-detected-lines">1. Low number of detected lines</h4>
-<div id="99460400" class="cell" data-execution_count="8">
+<div id="b0a445ad" class="cell" data-execution_count="8">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>number_of_lines <span class="op">=</span> []</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">0</span>,<span class="bu">len</span>(new_data)):</span>
@@ -630,7 +631,7 @@ window.Quarto = {
 </section>
 <section id="low-average-confidence-thresholds" class="level4">
 <h4 class="anchored" data-anchor-id="low-average-confidence-thresholds">2. Low average confidence thresholds</h4>
-<div id="6944be52" class="cell" data-execution_count="9">
+<div id="e9e49732" class="cell" data-execution_count="9">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>average_confidence_thresholds <span class="op">=</span> []</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">0</span>,<span class="bu">len</span>(new_data)):</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    thresholds <span class="op">=</span> new_data[i][<span class="st">"scores"</span>]</span>
@@ -666,7 +667,7 @@ window.Quarto = {
 </section>
 <section id="refinement-failures" class="level4">
 <h4 class="anchored" data-anchor-id="refinement-failures">3. Refinement failures</h4>
-<div id="e0894b23" class="cell" data-execution_count="10">
+<div id="33d9976b" class="cell" data-execution_count="10">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>indices_failure <span class="op">=</span> []</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">0</span>,<span class="bu">len</span>(new_data)):</span>
@@ -690,7 +691,7 @@ window.Quarto = {
 </section>
 <section id="status-failures" class="level4">
 <h4 class="anchored" data-anchor-id="status-failures">4. Status failures</h4>
-<div id="aa6723e3" class="cell" data-execution_count="11">
+<div id="1854fae7" class="cell" data-execution_count="11">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>indices_status_failure <span class="op">=</span> []</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">0</span>,<span class="bu">len</span>(new_data)):</span>
@@ -711,7 +712,7 @@ The number of failures is zero so there's no need to do this. </code></pre>
 </section>
 <section id="low-building-visibility" class="level4">
 <h4 class="anchored" data-anchor-id="low-building-visibility">5. Low building visibility</h4>
-<div id="497eef8b" class="cell" data-execution_count="12">
+<div id="58b3c87c" class="cell" data-execution_count="12">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>building_visibility <span class="op">=</span> []</span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">0</span>,<span class="bu">len</span>(new_data)):</span>
@@ -739,7 +740,7 @@ The number of failures is zero so there's no need to do this. </code></pre>
 </section>
 <section id="low-sky-visibility" class="level4">
 <h4 class="anchored" data-anchor-id="low-sky-visibility">6. Low sky visibility</h4>
-<div id="4b6e4dde" class="cell" data-execution_count="13">
+<div id="e0d754c4" class="cell" data-execution_count="13">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>sky_visibility <span class="op">=</span> []</span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">0</span>,<span class="bu">len</span>(new_data)):</span>
@@ -767,7 +768,7 @@ The number of failures is zero so there's no need to do this. </code></pre>
 </section>
 <section id="low-ground-visibility" class="level4">
 <h4 class="anchored" data-anchor-id="low-ground-visibility">7. Low ground visibility</h4>
-<div id="d2de8f19" class="cell" data-execution_count="14">
+<div id="0b1c0a97" class="cell" data-execution_count="14">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>ground_visibility <span class="op">=</span> []</span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">0</span>,<span class="bu">len</span>(new_data)):</span>
@@ -795,7 +796,7 @@ The number of failures is zero so there's no need to do this. </code></pre>
 </section>
 <section id="high-entropy" class="level4">
 <h4 class="anchored" data-anchor-id="high-entropy">8. High entropy</h4>
-<div id="a25fbf94" class="cell" data-execution_count="15">
+<div id="447fff5a" class="cell" data-execution_count="15">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>entropies <span class="op">=</span> []</span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">0</span>,<span class="bu">len</span>(new_data)):</span>
 <span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    entropy_value <span class="op">=</span> new_data[i][<span class="st">"image_entropy"</span>]</span>
@@ -825,7 +826,7 @@ The number of failures is zero so there's no need to do this. </code></pre>
 </section>
 <section id="blursharpness" class="level4">
 <h4 class="anchored" data-anchor-id="blursharpness">9. Blur/sharpness</h4>
-<div id="ed59d447" class="cell" data-execution_count="16">
+<div id="68bbaa99" class="cell" data-execution_count="16">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>sharpness <span class="op">=</span> []</span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">0</span>,<span class="bu">len</span>(new_data)):</span>
 <span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    sharpness.append(new_data[i][<span class="st">"sharpness"</span>])</span>
@@ -857,7 +858,7 @@ The number of failures is zero so there's no need to do this. </code></pre>
 </section>
 <section id="high-amount-of-vegetation-in-the-facade" class="level4">
 <h4 class="anchored" data-anchor-id="high-amount-of-vegetation-in-the-facade">10. High amount of vegetation in the facade</h4>
-<div id="b5836555" class="cell" data-execution_count="17">
+<div id="b3891651" class="cell" data-execution_count="17">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>vegetation_in_facade <span class="op">=</span> []</span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">0</span>,<span class="bu">len</span>(validation_data)):</span>
@@ -888,7 +889,7 @@ The number of failures is zero so there's no need to do this. </code></pre>
 </section>
 <section id="putting-it-all-together" class="level3">
 <h3 class="anchored" data-anchor-id="putting-it-all-together">Putting it all together</h3>
-<div id="bb344470" class="cell" data-execution_count="18">
+<div id="538728f7" class="cell" data-execution_count="18">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>results_dictionary <span class="op">=</span> {}</span>
@@ -928,7 +929,7 @@ The number of failures is zero so there's no need to do this. </code></pre>
 <span id="cb21-37"><a href="#cb21-37" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb21-38"><a href="#cb21-38" aria-hidden="true" tabindex="-1"></a>dataframe <span class="op">=</span> pd.DataFrame(data <span class="op">=</span> results_dictionary)</span>
 <span id="cb21-39"><a href="#cb21-39" aria-hidden="true" tabindex="-1"></a>dataframe</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-display" data-execution_count="32">
+<div class="cell-output cell-output-display" data-execution_count="15">
 <div>
 
 
@@ -1106,7 +1107,7 @@ The number of failures is zero so there's no need to do this. </code></pre>
 <section id="figures" class="level3">
 <h3 class="anchored" data-anchor-id="figures">Figures</h3>
 <p>Finally, let’s plot the <span class="math inline">\(RMSE\)</span> of the three models under each condition and the penalty of using only the footprints. The conditions go from the smallest to the largest penalty.</p>
-<div id="1965805f" class="cell" data-execution_count="19">
+<div id="6f97dd42" class="cell" data-execution_count="19">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
 <span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> imageable.visualization.data_visualization <span class="im">import</span> plot_grouped_distribution_bars</span>
 <span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -1175,7 +1176,7 @@ The number of failures is zero so there's no need to do this. </code></pre>
 </div>
 </div>
 </div>
-<div id="2f1f3ec0" class="cell" data-execution_count="20">
+<div id="3490f9b3" class="cell" data-execution_count="20">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>plot <span class="op">=</span> plot_grouped_distribution_bars(</span>
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    groups <span class="op">=</span> groups,</span>
 <span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    model_names <span class="op">=</span> [<span class="st">"Footprint-only penalty"</span>],</span>
