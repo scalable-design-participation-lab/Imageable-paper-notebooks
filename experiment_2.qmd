@@ -1,0 +1,404 @@
+---
+title: Framework experiment 2
+author: Uriel Legaria
+jupyter: imageable
+format: html
+execute:
+  warning: false
+  message: false
+---
+
+### Auxiliary functions
+Following the structure of the first experiment let's first define some auxiliary functions.
+
+```{python}
+
+import numpy as np
+import joblib
+
+def get_rmse(
+        y_pred,
+        y_real
+    ):
+    rmse = 0
+    n = len(y_pred)
+    for i in range(0,n):
+        value_pred = y_pred[i]
+        value_real = y_real[i]
+
+        rmse +=(1/n)*(value_pred - value_real)**2
+    
+    rmse = np.sqrt(rmse)
+    return rmse
+
+
+def get_mae(y_pred, y_real):
+    mae = 0
+    n = len(y_pred)
+    for i in range(0,n):
+        value_pred = y_pred[i]
+        value_real = y_real[i]
+        mae += (1/n)*np.abs(value_pred - value_real)
+    return mae
+
+def get_mean_signed_error(y_pred, y_real):
+    n = len(y_pred)
+    diffs = []
+    for i in range(0,n):
+        value_pred = y_pred[i]
+        value_real = y_real[i]
+        diffs.append(value_pred - value_real)
+
+    return np.mean(diffs)
+
+def filter_data_by_indices(data, indices):
+    new_data = []
+    for i in range(0,len(data)):
+        if(i in indices):
+            new_data.append(data[i])
+    
+    return new_data
+
+
+def get_cluster_indices(data, cluster_value, cluster_key = "cluster"):
+    n = len(data)
+    indices = []
+    for i in range(0,n):
+        data_point = data[i]
+        if(data_point.get(cluster_key, None) == cluster_value):
+            indices.append(i)
+        
+    return indices
+```
+
+
+### Function that applies the experiment
+
+In this experiment we model performances for each building archetype (cluster) using two error metrics: $RMSE$ and $MAE$. 
+
+The calculations are simple, we
+
+1. Divide the validation instances depending on the cluster that they belong to.
+
+2. For each cluster we obtain the building height estimation error with the single XGBoost model and the cluster-then-predict system that we propose in this work.
+
+3. We get
+
+\begin{equation}
+\Delta = RMSE_{\text{CTP}} - RMSE_{\text{single}}
+\end{equation}
+
+```{python}
+class ExperimentResults:
+
+    def __init__(
+        self,
+        sample_size,
+        mae_single,
+        rmse_single,
+        signed_single,
+        mae_ctp,
+        rmse_ctp,
+        signed_ctp,
+        improvement_rmse,
+        improvement_mae
+    ):
+
+        self.mae_single = mae_single
+        self.rmse_single = rmse_single
+        self.signed_single = signed_single
+        self.mae_ctp = mae_ctp
+        self.rmse_ctp = rmse_ctp
+        self.signed_ctp = signed_ctp
+        self.improvement_mae = improvement_mae
+        self.improvement_rmse = improvement_rmse
+        self.sample_size = sample_size
+    
+
+    def to_dict(self):
+        output_dictionary = {}
+        output_dictionary["sample_size"] = self.sample_size
+        output_dictionary["rmse_single"] = self.rmse_single
+        output_dictionary["mae_single"] = self.mae_single
+        output_dictionary["signed_single"] = self.signed_single
+        output_dictionary["rmse_ctp"] = self.rmse_ctp
+        output_dictionary["mae_ctp"] = self.mae_ctp
+        output_dictionary["signed_ctp"] = self.signed_ctp
+        output_dictionary["improvement_mae"] = self.improvement_mae
+        output_dictionary["improvement_rmse"] = self.improvement_rmse
+
+        return output_dictionary
+
+
+
+
+def main_experiment_2(
+    cluster_vectors,
+    model_single,
+    model_ctp,
+    real_heights
+):
+
+    sample_size = len(cluster_vectors)
+    predictions_single = model_single.predict(cluster_vectors)
+    predictions_ctp = model_ctp.predict(cluster_vectors)
+
+    #Single XGBoost results
+    mae_single = get_mae(predictions_single, real_heights)
+    rmse_single = get_rmse(predictions_single, real_heights)
+    signed_single = get_mean_signed_error(predictions_single, real_heights)
+
+    #Cluster-then-predict results
+    mae_ctp = get_mae(predictions_ctp, real_heights)
+    rmse_ctp = get_rmse(predictions_ctp, real_heights)
+    signed_ctp = get_mean_signed_error(predictions_ctp, real_heights)
+
+    #Error improvements
+    improvement_mae = mae_single - mae_ctp
+    improvement_rmse = rmse_single - rmse_ctp
+
+    result = ExperimentResults(
+        sample_size = sample_size,
+        mae_single = mae_single, 
+        rmse_single = rmse_single,
+        signed_single = signed_single,
+        mae_ctp = mae_ctp, 
+        rmse_ctp = rmse_ctp, 
+        signed_ctp = signed_ctp, 
+        improvement_mae = improvement_mae, 
+        improvement_rmse = improvement_rmse
+    )
+
+    return result 
+```
+
+
+#### Preparing the data
+```{python}
+DATA_PATH = "/Users/legariapena.j/Documents/imageable-2026/imageable/data/training_validation_data/data.json"
+
+
+FEATURE_NAMES = [
+    "unprojected_area",
+    "projected_area",
+    "longitude_difference",
+    "latitude_difference",
+    "n_vertices",
+    "shape_length",
+    "complexity",
+    "inverse_average_segment_length",
+    "vertices_per_area",
+    "average_complexity_per_segment",
+    "isoperimetric_quotient",
+    "mean_distance_to_neighbors",
+    "nearest_neighbor_distance",
+    "material_pct_concrete",
+    "material_pct_metal",
+    "material_pct_glass",
+    "material_pct_plastic",
+    "material_pct_asphalt",
+    "material_pct_brick",
+    "material_pct_human_body",
+    "material_pct_wood",
+    "material_pct_plaster",
+    "material_pct_leaf",
+    "building_height"
+]
+
+import json
+with open(DATA_PATH, 'r') as file:
+    data = json.load(file)
+
+
+long_feature_names = data[0]["feature_names"]
+
+monterrey_data = [x for x in data if x["city"] == "Monterrey"]
+boston_data = [x for x in data if x["city"] == "Boston"]
+
+print(f"Data from Monterrey: {len(monterrey_data)}")
+print(f"Data from Boston: {len(boston_data)}")
+
+
+monterrey_normalized_vectors = [x["features"] for x in monterrey_data]
+boston_normalized_vectors = [x["features"] for x in boston_data]
+monterrey_clusters = [x["cluster"] for x in monterrey_data]
+boston_clusters = [x["cluster"] for x in boston_data]
+monterrey_real_heights = [x["real_height"] for x in monterrey_data]
+boston_real_heights = [x["real_height"] for x in boston_data]
+
+#This one will be useful 
+indices_vector_features = []
+for i in range(0,len(FEATURE_NAMES)):
+    feature_name = FEATURE_NAMES[i]
+    index = long_feature_names.index(feature_name)
+    indices_vector_features.append(index)
+
+
+new_vectors_monterrey = []
+for i in range(0,len(monterrey_normalized_vectors)):
+    new_vectors_monterrey.append(filter_data_by_indices(monterrey_normalized_vectors[i], indices_vector_features))
+
+new_vectors_boston = []
+for i in range(0,len(boston_normalized_vectors)):
+    new_vectors_boston.append(filter_data_by_indices(boston_normalized_vectors[i],indices_vector_features))
+
+
+#We need to keep only the validation data so let's get the indices of that 
+validation_indices_monterrey = []
+validation_indices_boston = []
+for i in range(0,len(monterrey_data)):
+    vector = monterrey_data[i]
+    if(vector["data_type"] == "validation"):
+        validation_indices_monterrey.append(i)
+
+
+for i in range(0,len(boston_data)):
+    vector = boston_data[i]
+    if(vector["data_type"] == "validation"):
+        validation_indices_boston.append(i)
+
+
+validation_vectors_monterrey = filter_data_by_indices(new_vectors_monterrey, validation_indices_monterrey)
+validation_vectors_boston = filter_data_by_indices(new_vectors_boston, validation_indices_boston)
+validation_vectors_clusters_monterrey = filter_data_by_indices(monterrey_clusters, validation_indices_monterrey)
+validation_vectors_clusters_boston = filter_data_by_indices(boston_clusters, validation_indices_boston)
+validation_real_heights_monterrey = filter_data_by_indices(monterrey_real_heights, validation_indices_monterrey)
+validation_real_heights_boston = filter_data_by_indices(boston_real_heights, validation_indices_boston)
+
+#Ok, we now have the first step. The next on is to open our models
+SINGLE_MODEL_PATH = "/Users/legariapena.j/Documents/imageable-2026/imageable/data/models/single_xgb_model.pkl"
+CLUSTER_THEN_PREDICT_MODEL_PATH = "/Users/legariapena.j/Documents/imageable-2026/imageable/data/models/cluster_ensemble_model.pkl"
+
+single_model = joblib.load(SINGLE_MODEL_PATH)
+cluster_then_predict_model = joblib.load(CLUSTER_THEN_PREDICT_MODEL_PATH)
+
+
+print(f"The number of validation instances in Mnterrey is {len(validation_vectors_monterrey)}")
+print(f"The number of validation instances in Boston is {len(validation_vectors_boston)}")
+
+#Seems to be working. Now, what I need to do is simply something like:
+cluster_indices_dictionary_monterrey = {}
+clusters = np.unique(monterrey_clusters)
+validation_data_monterrey = filter_data_by_indices(monterrey_data, validation_indices_monterrey)
+validation_data_boston = filter_data_by_indices(boston_data, validation_indices_boston)
+
+for i in range(0,len(clusters)):
+    cluster = clusters[i]
+    cluster_indices_dictionary_monterrey[cluster] = get_cluster_indices(
+        validation_data_monterrey,
+        cluster
+    )
+
+
+vectors_by_cluster_monterrey = {}
+for i in range(0,len(clusters)):
+    cluster = clusters[i]
+    indices = cluster_indices_dictionary_monterrey[cluster]
+    cluster_vectors = filter_data_by_indices(validation_vectors_monterrey, indices)
+    vectors_by_cluster_monterrey[cluster] = cluster_vectors
+
+real_heights_by_cluster_monterrey = {}
+
+for i in range(0,len(clusters)):
+    cluster = clusters[i]
+    indices = cluster_indices_dictionary_monterrey[cluster]
+    heights = filter_data_by_indices(validation_real_heights_monterrey, indices)
+    real_heights_by_cluster_monterrey[cluster] = heights
+
+cluster_indices_dictionary_boston = {}
+for i in range(0,len(clusters)):
+    cluster = clusters[i]
+    cluster_indices_dictionary_boston[cluster] = get_cluster_indices(
+        validation_data_boston,
+        cluster
+    )
+
+vectors_by_cluster_boston = {}
+for i in range(0,len(clusters)):
+    cluster = clusters[i]
+    indices = cluster_indices_dictionary_boston[cluster]
+    cluster_vectors = filter_data_by_indices(validation_vectors_boston, indices)
+    vectors_by_cluster_boston[cluster] = cluster_vectors
+
+real_heights_by_cluster_boston = {}
+for i in range(0,len(clusters)):
+    cluster = clusters[i]
+    indices = cluster_indices_dictionary_boston[cluster]
+    heights = filter_data_by_indices(validation_real_heights_boston, indices)
+    real_heights_by_cluster_boston[cluster] = heights
+```
+
+#### Filling the Monterrey rows
+
+```{python}
+results_dictionary = {}
+results_dictionary["city"] = []
+results_dictionary["cluster"] = []
+results_dictionary["sample_size"] = []
+results_dictionary["mae_single"] = []
+results_dictionary["mae_ctp"] = []
+results_dictionary["improvement_mae"] = []
+results_dictionary["rmse_single"] = []
+results_dictionary["rmse_ctp"] = []
+results_dictionary["improvement_rmse"] = []
+results_dictionary["signed_single"] = []
+results_dictionary["signed_ctp"] = []
+
+for i in range(0,len(clusters)):
+    cluster = clusters[i]
+    cluster_vectors = vectors_by_cluster_monterrey[cluster]
+    real_heights = real_heights_by_cluster_monterrey[cluster]
+    results = main_experiment_2(
+        cluster_vectors,
+        single_model,
+        cluster_then_predict_model,
+        real_heights
+    )
+
+    results_dictionary["city"].append("Monterrey")
+    results_dictionary["cluster"].append(int(cluster))
+    results_dictionary["sample_size"].append(results.sample_size)
+    results_dictionary["mae_single"].append(results.mae_single)
+    results_dictionary["mae_ctp"].append(results.mae_ctp)
+    results_dictionary["improvement_mae"].append(results.improvement_mae)
+    results_dictionary["rmse_single"].append(results.rmse_single)
+    results_dictionary["rmse_ctp"].append(results.rmse_ctp)
+    results_dictionary["improvement_rmse"].append(results.improvement_rmse)
+    results_dictionary["signed_single"].append(results.signed_single)
+    results_dictionary["signed_ctp"].append(results.signed_ctp)
+```
+
+#### Filling the Boston rows
+
+```{python}
+for i in range(0,len(clusters)):
+    cluster = clusters[i]
+    cluster_vectors = vectors_by_cluster_boston[cluster]
+    real_heights = real_heights_by_cluster_boston[cluster]
+    results = main_experiment_2(
+        cluster_vectors,
+        single_model,
+        cluster_then_predict_model,
+        real_heights
+    )
+
+    results_dictionary["city"].append("Boston")
+    results_dictionary["cluster"].append(int(cluster))
+    results_dictionary["sample_size"].append(results.sample_size)
+    results_dictionary["mae_single"].append(results.mae_single)
+    results_dictionary["mae_ctp"].append(results.mae_ctp)
+    results_dictionary["improvement_mae"].append(results.improvement_mae)
+    results_dictionary["rmse_single"].append(results.rmse_single)
+    results_dictionary["rmse_ctp"].append(results.rmse_ctp)
+    results_dictionary["improvement_rmse"].append(results.improvement_rmse)
+    results_dictionary["signed_single"].append(results.signed_single)
+    results_dictionary["signed_ctp"].append(results.signed_ctp)
+```
+
+### Putting it all together
+
+```{python}
+import pandas as pd
+dataframe = pd.DataFrame(data = results_dictionary)
+dataframe
+```
