@@ -13,3 +13,6 @@ To view the notebooks click on:
 * [Framework experiment 1](https://scalable-design-participation-lab.github.io/Imageable-paper-notebooks/experiment_1.html)
 * [Framework experiment 2](https://scalable-design-participation-lab.github.io/Imageable-paper-notebooks/experiment_2.html)
 * [Framework experiment 3](https://scalable-design-participation-lab.github.io/Imageable-paper-notebooks/experiment_3.html)
+* [Framework thresholds](https://scalable-design-participation-lab.github.io/Imageable-paper-notebooks/threshold_calculations.html)
+* [Pipeline success rates](https://scalable-design-participation-lab.github.io/Imageable-paper-notebooks/success_rates_plot.html)
+* [Training the street distance model](https://scalable-design-participation-lab.github.io/Imageable-paper-notebooks/training_street_distance.html)
