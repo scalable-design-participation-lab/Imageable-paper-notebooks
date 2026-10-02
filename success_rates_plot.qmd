@@ -1,0 +1,231 @@
+---
+title: Pipeline success rates
+author: Uriel Legaria
+jupyter: imageable
+format:
+  html:
+    include-in-header:
+      text: "<style>.figure-img { max-width: 100%; height: auto; }</style>"
+execute:
+  warning: false
+  message: false
+---
+
+In this notebook I compute the success rate of each stage of the pipeline for Boston and Monterrey, and build the figure that goes in the supplement. The stages are:
+
+1. Image acquisition
+2. Camera parameter refinement
+3. Building height estimation
+4. Facade material segmentation
+
+### Opening the data
+
+```{python}
+DATA_PATH = "/Users/legariapena.j/Documents/imageable-2026/imageable/data/training_validation_data/data.json"
+SCALER_PATH = "/Users/legariapena.j/Documents/imageable-2026/imageable/data/models/cluster_ensemble_scaler.pkl"
+IMAGES_PATH = "/Users/legariapena.j/Library/CloudStorage/GoogleDrive-legariapena.j@husky.neu.edu/Shared drives/Cool and Carbon Free Africa/Building Image Datasets/data"
+
+import json
+with open(DATA_PATH, "r") as file:
+    data = json.load(file)
+
+feature_names = data[0]["feature_names"]
+
+monterrey_data = [x for x in data if x["city"] == "Monterrey"]
+boston_data = [x for x in data if x["city"] == "Boston"]
+
+print(f"Monterrey has {len(monterrey_data)} labelled buildings and Boston has {len(boston_data)}")
+```
+
+### The buildings we asked for
+
+Every building we tried has a folder on the drive holding the image we downloaded and a `metadata.json`. The index a building carries in `data.json` gives its folder number: a Monterrey building of index $i$ sits in `building_{i+1}`, and a Boston building of index $i$ sits in `building_{i-5054}`. After the de-duplication Monterrey keeps the first 5,055 folders, the 400 m buffer expansion adds `building_20001` to `building_26753`, and Boston keeps 10,000. Those are the buildings every rate below is measured over.
+
+I key the folders by their number, which also drops the two Monterrey buildings that sit on a block boundary and are stored twice, and I skip the geojson files that share the `building_` prefix.
+
+```{python}
+N_FOLDERS_MONTERREY = 5055
+FIRST_EXPANSION_FOLDER_MONTERREY = 20001
+N_FOLDERS_BOSTON = 10000
+
+import glob
+import os
+import re
+
+def index_building_folders(city_directory, n_folders, first_expansion_folder = None):
+    folders = {}
+    for path in glob.glob(f"{city_directory}/Images */building_*"):
+        match = re.fullmatch(r"building_(\d+)", os.path.basename(path))
+        if match is None:
+            continue
+
+        number = int(match.group(1))
+        in_expansion = first_expansion_folder is not None and number >= first_expansion_folder
+        if number <= n_folders or in_expansion:
+            folders[number] = path
+
+    return folders
+
+folders_monterrey = index_building_folders(
+    f"{IMAGES_PATH}/monterrey",
+    N_FOLDERS_MONTERREY,
+    FIRST_EXPANSION_FOLDER_MONTERREY,
+)
+folders_boston = index_building_folders(f"{IMAGES_PATH}/boston", N_FOLDERS_BOSTON)
+
+print(f"Monterrey has {len(folders_monterrey)} building folders and Boston has {len(folders_boston)}")
+```
+
+### Reading the metadata
+
+The metadata of a building records whether the image came back at all, in `status`, and whether the camera parameters could be refined afterwards, in `adjustment_success`. The folders live on Google Drive, where each file costs a round trip, so I read them with a pool of threads.
+
+```{python}
+N_THREADS = 64
+
+from concurrent.futures import ThreadPoolExecutor
+
+def read_metadata(folder):
+    try:
+        with open(f"{folder}/metadata.json", "r") as file:
+            return json.load(file)
+    except (OSError, json.JSONDecodeError):
+        return None
+
+def read_all_metadata(folders):
+    with ThreadPoolExecutor(max_workers = N_THREADS) as pool:
+        return list(pool.map(read_metadata, folders.values()))
+
+metadata_monterrey = read_all_metadata(folders_monterrey)
+metadata_boston = read_all_metadata(folders_boston)
+
+print(f"Read {len(metadata_monterrey)} Monterrey and {len(metadata_boston)} Boston metadata files")
+```
+
+### Image acquisition
+
+A building counts as acquired when its metadata came back with `status` true. A folder with no readable metadata is a building we never got an image for, so it counts as a failure.
+
+```{python}
+def get_acquired(metadata):
+    return [x for x in metadata if x is not None and x.get("status")]
+
+acquisition_monterrey = 100 * len(get_acquired(metadata_monterrey)) / len(metadata_monterrey)
+acquisition_boston = 100 * len(get_acquired(metadata_boston)) / len(metadata_boston)
+
+print(f"Image acquisition for Monterrey is {acquisition_monterrey}")
+print(f"Image acquisition for Boston is {acquisition_boston}")
+```
+
+### Camera parameter refinement
+
+Refining the camera parameters only makes sense for a building whose image came back, so here the denominator is the buildings we acquired, not all of them.
+
+```{python}
+def get_refinement_rate(metadata):
+    acquired = get_acquired(metadata)
+    refined = [x for x in acquired if x["adjustment_success"]]
+
+    return 100 * len(refined) / len(acquired)
+
+refinement_monterrey = get_refinement_rate(metadata_monterrey)
+refinement_boston = get_refinement_rate(metadata_boston)
+
+print(f"Camera parameter refinement for Monterrey is {refinement_monterrey}")
+print(f"Camera parameter refinement for Boston is {refinement_boston}")
+```
+
+### Building height estimation
+
+The height we read off the street view image is stored as a feature, and when the estimation fails the pipeline writes $-1$ in its place. The features are z-scores, so I invert them with the scaler before looking for the sentinel.
+
+```{python}
+HEIGHT_NAME = "building_height"
+HEIGHT_FAILURE = -1
+HEIGHT_TOLERANCE = 1e-6
+
+import joblib
+import numpy as np
+
+scaler = joblib.load(SCALER_PATH)
+
+def get_height_estimation_rate(city_data):
+    index = feature_names.index(HEIGHT_NAME)
+    features = np.array([x["features"] for x in city_data])
+    heights = scaler.inverse_transform(features)[:, index]
+    estimated = [x for x in heights if abs(x - HEIGHT_FAILURE) > HEIGHT_TOLERANCE]
+
+    return 100 * len(estimated) / len(heights)
+
+height_monterrey = get_height_estimation_rate(monterrey_data)
+height_boston = get_height_estimation_rate(boston_data)
+
+print(f"Building height estimation for Monterrey is {height_monterrey}")
+print(f"Building height estimation for Boston is {height_boston}")
+```
+
+### Facade material segmentation
+
+The segmentation writes a percentage for every material it recognises in the image. A building it could not segment carries no percentages and never enters `data.json`, so I count the buildings that do carry a material vector against the buildings we acquired an image for.
+
+```{python}
+MATERIAL_PREFIX = "material_pct_"
+
+def get_material_segmentation_rate(city_data, metadata):
+    indices = [i for i, name in enumerate(feature_names) if name.startswith(MATERIAL_PREFIX)]
+    features = np.array([x["features"] for x in city_data])
+    percentages = scaler.inverse_transform(features)[:, indices]
+    segmented = [x for x in percentages if sum(x) > 0]
+
+    return 100 * len(segmented) / len(get_acquired(metadata))
+
+material_monterrey = get_material_segmentation_rate(monterrey_data, metadata_monterrey)
+material_boston = get_material_segmentation_rate(boston_data, metadata_boston)
+
+print(f"Facade material segmentation for Monterrey is {material_monterrey}")
+print(f"Facade material segmentation for Boston is {material_boston}")
+```
+
+### The figure
+
+```{python}
+from imageable.visualization.data_visualization import plot_grouped_distribution_bars
+
+dracula_colors = {
+    "background":   "#282a36",
+    "current_line": "#44475a",
+    "foreground":   "#f8f8f2",
+    "comment":      "#6272a4",
+    "cyan":         "#8be9fd",
+    "green":        "#50fa7b",
+    "orange":       "#ffb86c",
+    "pink":         "#ff79c6",
+    "purple":       "#bd93f9",
+    "red":          "#ff5555",
+    "yellow":       "#f1fa8c",
+}
+
+FIGURES_PATH = "/Users/legariapena.j/Documents/imageable-2026/imageable/data/paper_images"
+
+groups      = ["Image acquisition", "Camera refinement", "Height estimation", "Material segmentation"]
+model_names = ["Boston", "Monterrey"]
+colors      = [dracula_colors["pink"], dracula_colors["cyan"]]
+
+success_rates_plot = {
+    "Boston":    [acquisition_boston,    refinement_boston,    height_boston,    material_boston],
+    "Monterrey": [acquisition_monterrey, refinement_monterrey, height_monterrey, material_monterrey],
+}
+
+plot = plot_grouped_distribution_bars(
+    groups=groups,
+    model_names=model_names,
+    rmse=success_rates_plot,
+    y_label="Success rate (%)",
+    x_label="Pipeline stage",
+    title="Success rates by stage and city",
+    order="input",
+    colors=colors,
+    savepath=f"{FIGURES_PATH}/success_rates_boston_vs_monterrey.png",
+    dpi=300,
+)
+```
