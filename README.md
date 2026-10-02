@@ -11,3 +11,4 @@ To view the notebooks click on:
 * [cluster-then-predict vs. other models RMSE](https://scalable-design-participation-lab.github.io/Imageable-paper-notebooks/plot_ours_vs_universal.html)
 * [Material percentages](https://scalable-design-participation-lab.github.io/Imageable-paper-notebooks/material_percentages.html)
 * [Framework experiment 1](https://scalable-design-participation-lab.github.io/Imageable-paper-notebooks/experiment_1.html)
+* [Framework experiment 2](https://scalable-design-participation-lab.github.io/Imageable-paper-notebooks/experiment_2.html)
